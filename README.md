@@ -60,8 +60,6 @@ meu-projeto/
 
 - React
 - Vite
-- JavaScript
-- CSS
 
 ### Back-end
 
