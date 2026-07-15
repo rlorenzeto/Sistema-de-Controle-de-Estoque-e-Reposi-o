@@ -20,6 +20,8 @@ function SideBar (){
                         <img src={Logo} alt="Logo StockControl" className="sidebar-logo" />
                     </div>
 
+                    <hr></hr>
+
                     <nav className="sidebar-nav">
                         <p className="sidebar-title">MENU</p>
 
@@ -61,7 +63,10 @@ function SideBar (){
                     </nav>
                 </div>
 
+
                 <div className="sidebar-bottom">
+                    <hr></hr>
+                    
                     <div className="logout-wrapper">
                         <img  src="https://img.icons8.com/?size=20&id=22112&format=png&color=ffffff" alt="Ícone de sair" className="logout-icon"/>
                         <button className="logout-button" onClick={handleLogout}>

@@ -17,7 +17,6 @@
 .sidebar-brand {
   width: 100%;
   padding-bottom: 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .sidebar-logo {
@@ -75,10 +74,10 @@
 .sidebar-bottom {
   width: 100%;
   padding-top: 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .logout-wrapper {
+  padding-top:18px;
   display: flex;
   align-items: center;
   gap: 8px;
