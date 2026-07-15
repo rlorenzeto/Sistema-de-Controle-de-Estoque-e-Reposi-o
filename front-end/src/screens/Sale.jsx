@@ -7,7 +7,7 @@ export default function Sale(){
             <div className="sale-container">
                 <SideBar/>
                 <div className="sale-panel">
-
+            
                 </div>
             </div>
         </>
