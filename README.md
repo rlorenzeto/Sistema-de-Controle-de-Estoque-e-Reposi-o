@@ -32,7 +32,6 @@ meu-projeto/
     │   ├── controllers/
     │   ├── routes/
     │   └── app.js
-    ├── server.js
     └── package.json
 ```
 
@@ -51,8 +50,7 @@ meu-projeto/
 - `src/config/`: configuração da aplicação, como conexão com o banco.
 - `src/controllers/`: lógica que recebe requisição e devolve resposta.
 - `src/routes/`: definição das rotas da API.
-- `src/app.js`: configuração do Express, middlewares e rotas.
-- `server.js`: inicialização do servidor.
+- `src/app.js`: inicialização do servidor e configuração do Express, middlewares e rotas.
 
 ## Tecnologias utilizadas
 
@@ -90,7 +88,7 @@ Abra outro terminal na pasta `back-end` e execute:
 
 ```bash
 npm install
-node server.js
+npm run dev
 ```
 
 Se depois houver um script de desenvolvimento configurado no `package.json`, também será possível rodar com:
