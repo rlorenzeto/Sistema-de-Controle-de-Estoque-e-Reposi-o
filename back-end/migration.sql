@@ -136,6 +136,10 @@ CREATE TABLE usuario (
 	CONSTRAINT usuario_pk PRIMARY KEY (id_usuario)
 );
 
+ALTER TABLE usuario
+ADD COLUMN reset_password_token VARCHAR(255),
+ADD COLUMN reset_password_expires TIMESTAMP;
+
 -- venda definição
 
 -- Drop table
