@@ -1,4 +1,4 @@
-import express from 'express';
+import express from 'express'
 import AuthRoutes from './routes/AuthRoutes.js'
 import DashboardRoutes from './routes/DashboardRoutes.js'
 // import StockRoutes from './routes/StockRoutes.js'
