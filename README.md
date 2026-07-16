@@ -109,6 +109,7 @@ DB_HOST=nome do host
 DB_NAME=nome do banco
 DB_PASSWORD=senha do banco
 DB_PORT=porta do banco
+JWT_SECRET=secret para o token
 ```
 ## Migrations
 
