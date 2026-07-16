@@ -8,14 +8,32 @@
   display: flex;
   min-height: 100vh;
   width: 100%;
+  overflow: hidden;
 }
 
 .sale-panel {
   display: flex;
-  flex: 0 0 85%;
+  flex: 1 1 auto;
+  min-width: 0;
   flex-direction: column;
-  align-items: center;
   justify-content: flex-start;
   background-color: #E6F2EC;
-  padding: 70px 40px 40px;
+}
+
+.sale-main{
+  width: 100%;
+  max-width: 1400px;
+  margin: 0;
+  padding: 32px;
+  box-sizing: border-box;
+}
+
+.sale-cards{
+  display: grid;
+  justify-items: center;
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 70px;
+  margin-bottom: 40px;
+  width: 100%;
+  max-width: 1160px;
 }
