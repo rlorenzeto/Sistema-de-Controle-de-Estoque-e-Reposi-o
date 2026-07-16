@@ -101,21 +101,24 @@ npm run dev
 
 A conexão com o PostgreSQL deve ficar no back-end. O front-end não deve acessar o banco diretamente, porque as credenciais e a lógica de acesso precisam ficar protegidas no servidor.
 
-Exemplo de conexão com PostgreSQL:
+Exemplo de conexão com PostgreSQL no .env:
 
 ```js
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  host: 'localhost',
-  user: 'postgres',
-  password: 'sua_senha',
-  database: 'seu_banco',
-  port: 5432,
-});
-
-module.exports = pool;
+DB_USER=nome do usuario
+DB_HOST=nome do host
+DB_NAME=nome do banco
+DB_PASSWORD=senha do banco
+DB_PORT=porta do banco
 ```
+## Migrations
+
+Para rodar as migrations e criar as tabelas no banco de dados rode no terminal e logo em seguida adicione a senha do banco de dados:
+
+```bash
+psql -U postgres -f backend/migration.sql
+```
+
+OBS: Talvez dê problema no comando psql, terá que adicionar o caminho dele no PATH nas variáveis de ambiente do windows.
 
 ## Clonar o projeto do GitHub 
 
