@@ -55,7 +55,7 @@ export default function Login() {
             </button>
 
             <p className='register-text'>
-              Não tem acesso? <a href='/'>Cadastre-se</a>
+              Não tem acesso? <a href='/register'>Cadastre-se</a>
             </p>
             
           </div>

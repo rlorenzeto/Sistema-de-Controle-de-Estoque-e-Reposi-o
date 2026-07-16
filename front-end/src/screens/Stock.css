@@ -17,5 +17,41 @@
   align-items: center;
   justify-content: flex-start;
   background-color: #E6F2EC;
-  padding: 70px 40px 40px;
 }
+
+.informative{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  width: 1300px;  
+  height: 135px;
+  background-color: aquamarine;
+}
+
+.box-one{
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+align-items: flex-start ;
+  border-radius: 6px;
+  background: #FFF;
+  width: 317px;
+  height: 135px;
+}
+
+.box-two{
+  border-radius: 6px;
+  background: #FFF;;
+  width: 317px;
+  height: 135px;
+}
+
+.box-three{
+  border-radius: 6px;
+  background: #FFF;;
+  width: 317px;
+  height: 135px;
+}
+
+
