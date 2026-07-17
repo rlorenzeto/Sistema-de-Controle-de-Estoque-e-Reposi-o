@@ -4,6 +4,7 @@
   background-color: #ffffff;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 32px;
   border-bottom: 1px solid #e9efea;
 }
@@ -12,4 +13,28 @@
   font-size: 20px;
   font-weight: 700;
   color: #184d3b;
+}
+
+.header-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #008155;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.header-button:hover {
+  background-color: #059669;
+}
+
+.button-icon {
+  font-size: 18px;
+  font-weight: 700;
 }
