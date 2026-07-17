@@ -48,6 +48,36 @@ export default function ListaVendas() {
   return (
     <div className="tabela-vendas">
       <h3 className="tabela-titulo">Lista de Pedidos Recentes</h3>
+      
+      <div className="filtros-container">
+        <div className="filtro-busca">
+          <svg className="filtro-icon" xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#9ca3af">
+            <path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z" />
+          </svg>
+          <input type="text" placeholder="Buscar por ID, Cliente..." />
+        </div>
+        
+        <div className="filtro-select">
+          <svg className="filtro-icon" xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#9ca3af">
+            <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Z"/>
+          </svg>
+          <select>
+            <option>Últimos 30 dias</option>
+            <option>Últimos 7 dias</option>
+            <option>Hoje</option>
+            <option>Este mês</option>
+          </select>
+        </div>
+        
+        <div className="filtro-select">
+          <select>
+            <option>Todos</option>
+            <option>Concluído</option>
+            <option>Pendente</option>
+          </select>
+        </div>
+      </div>
+      
       <div className="tabela-container">
         <table>
           <thead>

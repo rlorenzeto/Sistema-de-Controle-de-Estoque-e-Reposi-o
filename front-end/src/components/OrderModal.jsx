@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./OrderModal.css";
+import RegisterClient from "./RegisterClient";
 
 export default function OrderModal({ isOpen, onClose }) {
     const [items, setItems] = useState([
