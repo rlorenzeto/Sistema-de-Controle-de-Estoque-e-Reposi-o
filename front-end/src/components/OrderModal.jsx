@@ -9,17 +9,15 @@ export default function OrderModal({ isOpen, onClose }) {
     ]);
 
     const handleIncrement = (itemId) => {
-        setItems(items.map(item => 
+        setItems(items.map(item => // mapeia cada item e incrementa a quantidade do item com o id correspondente
             item.id === itemId ? { ...item, quantidade: item.quantidade + 1 } : item
         ));
     };
 
-    const handleDecrement = (itemId) => {
-        setItems(items.map(item => 
-            item.id === itemId && item.quantidade > 1 
-                ? { ...item, quantidade: item.quantidade - 1 } 
-                : item
-        ));
+    const handleDecrement = (itemId) => { 
+        setItems(prevItems => { 
+            return prevItems.map(item => item.id === itemId ? { ...item, quantidade: item.quantidade - 1 } : item).filter(item => item.quantidade > 0);
+        });
     };
 
     const calcularSubtotal = () => {
