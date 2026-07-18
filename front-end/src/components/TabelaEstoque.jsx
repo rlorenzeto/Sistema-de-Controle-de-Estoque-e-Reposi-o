@@ -1,79 +1,85 @@
 import React from "react";
-import "./TabelaVendas.css";
+import "./TabelaEstoque.css";
 
-const pedidos = [
-  {
-    id: "#V0001",
-    data: "12/07/2026 14:10",
-    cliente: "Maria Silva",
-    itens: 3,
-    total: "R$ 250,00",
-    status: "Concluído",
-  },
-  {
-    id: "#V0002",
-    data: "12/07/2026 14:15",
-    cliente: "João Santos",
-    itens: 1,
-    total: "R$ 75,50",
-    status: "Pendente",
-  },
-  {
-    id: "#V0003",
-    data: "12/07/2026 14:20",
-    cliente: "Ana Costa",
-    itens: 5,
-    total: "R$ 510,00",
-    status: "Concluído",
-  },
-  {
-    id: "#V0004",
-    data: "12/07/2026 14:25",
-    cliente: "Beatriz Costa",
-    itens: 2,
-    total: "R$ 520,00",
-    status: "Concluído",
-  },
+const itens = [
     {
-    id: "#V0005",
-    data: "12/07/2026 14:30",
-    cliente: "Angela Barbosa",
-    itens: 4,
-    total: "R$ 2320,00",
-    status: "Concluído",
-  },
+        id:"#P1001",
+        status:"",
+        nome:"Cabo USB-c 2m",
+        estoque:"3 itens",
+        valorCompra:"R$125,00",
+        valorVenda:"R$250,00",    
+    },
+    {
+        id:"#O1002",
+        status:"",
+        nome:"Papel A4 500 fls",
+        estoque:"1 item",
+        valorCompra:"R$75,50",
+        valorVenda:"R$150,00",    
+    },
+    {
+        id:"#O1003",
+        status:"",
+        nome:"Cabo HDMI 2m",
+        estoque:"5 itens",
+        valorCompra:"R$510,00",
+        valorVenda:"R$736,00",    
+    },
+    {
+        id:"#O1004",
+        status:"",
+        nome:"Filtro de Linha",
+        estoque:"2 itens",
+        valorCompra:"R$180,00",
+        valorVenda:"R$220,00",    
+    },
+    {
+        id:"#O1005",
+        status:"",
+        nome:"Cabo VGA",
+        estoque:"1 item",
+        valorCompra:"R$45,00",
+        valorVenda:"R$84,00",    
+    },
+    {
+        id:"#O1006",
+        status:"",
+        nome:"Teclado Mecânico",
+        estoque:"1 item",
+        valorCompra:"R$45,00",
+        valorVenda:"R$98,00",    
+    },
 ];
 
 export default function ListaVendas() {
   return (
     <div className="tabela-vendas">
-      <h3 className="tabela-titulo">Lista de Pedidos Recentes</h3>
+      <h3 className="tabela-titulo">Lista de Produtos</h3>
       
       <div className="filtros-container">
         <div className="filtro-busca">
           <svg className="filtro-icon" xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#9ca3af">
             <path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z" />
           </svg>
-          <input type="text" placeholder="Buscar por ID, Cliente..." />
+          <input type="text" placeholder="Buscar por ID, Produto..." />
         </div>
         
         <div className="filtro-select">
-          <svg className="filtro-icon" xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#9ca3af">
-            <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Z"/>
-          </svg>
           <select>
-            <option>Últimos 30 dias</option>
-            <option>Últimos 7 dias</option>
-            <option>Hoje</option>
-            <option>Este mês</option>
+            <option disabled selected hidden>Categoria</option>
+            <option>Categoria A</option>
+            <option>Categoria B</option>
+            <option>Categoria C</option>
           </select>
         </div>
         
         <div className="filtro-select">
           <select>
-            <option>Todos</option>
-            <option>Concluído</option>
-            <option>Pendente</option>
+            <option disabled selected hidden>Status</option>
+            <option>Regular</option>
+            <option>Alerta</option>
+            <option>Crítico</option>
           </select>
         </div>
       </div>
@@ -83,23 +89,23 @@ export default function ListaVendas() {
           <thead>
             <tr>
               <th>ID</th> 
-              <th>Data</th>
-              <th>Cliente</th>
-              <th>Itens</th>
-              <th>Total</th>
               <th>Status</th>
+              <th>Nome</th>
+              <th>Estoque</th>
+              <th>Valor Compra</th>
+              <th>Valor Venda</th>
               <th>Ações</th>
             </tr>
           </thead>
           <tbody>
-            {pedidos.map((pedido) => (
-              <tr key={pedido.id}> 
-                <td>{pedido.id}</td> 
-                <td>{pedido.data}</td>
-                <td>{pedido.cliente}</td>
-                <td>{pedido.itens}</td>
-                <td>{pedido.total}</td>
-                <td>{pedido.status}</td>
+            {itens.map((item) => (
+              <tr key={item.id}> 
+                <td>{item.id}</td> 
+                <td>{item.status}</td>
+                <td>{item.nome}</td>
+                <td>{item.estoque}</td>
+                <td>{item.valorCompra}</td>
+                <td>{item.valorVenda}</td>
                 <td> 
                   <div className="acoes-container">
                     <button className="btn-acao">

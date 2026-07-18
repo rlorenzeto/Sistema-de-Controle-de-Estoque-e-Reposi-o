@@ -79,3 +79,35 @@ tbody tr:hover {
     gap: 8px;
     min-width: max-content;
 }
+
+.filtros-container{
+    display: flex;
+    gap: 40px;
+    padding: 25px;
+    align-items: center;
+}
+
+.filtro-busca{
+    border-radius: 6px;
+    background-color: white;
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+    width: 480px;
+}
+
+.filtro-busca input {
+    border: none;
+    outline: none;
+}
+
+.filtro-select{
+    border-radius: 6px;
+    background-color: white;
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+}
+
+.filtro-select select {
+    border: none;
+    outline: none;
+}
