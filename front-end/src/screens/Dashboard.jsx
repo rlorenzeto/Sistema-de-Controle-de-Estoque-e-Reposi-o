@@ -115,7 +115,7 @@ export default function Dashboard(){
                             options={options}
                             series={series}
                             type="line"
-                            height="180px"
+                            height={160}
                         />
                 
                     </div>

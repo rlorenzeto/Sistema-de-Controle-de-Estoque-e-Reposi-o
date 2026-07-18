@@ -6,21 +6,23 @@ import React, { useState } from "react";
 export default function Cadastro() {
   const navigate = useNavigate();
 
-  function handleRegister() {
-    navigate("/dashboard");
-  }
+  // function handleRegister() {
+  //   navigate("/dashboard");
+  // }
 
   const [formData, setFormData] = useState({
-    nome: "",
-    nomeEmpresa: "",
+    nome_usuario: "",
+    nome_empresa: "",
     email: "",
-    cpfCnpj: "",
+    cpf_cnpj: "",
     rua: "",
-    numero: "",
-    bairro: "",
-    cep: "",
+    estado: "",
+    cidade: "",
+    pais: "",
     telefone: "",
-    password: "",
+    cep: "",
+    bairro: "",
+    senha: "",
   });
 
   const handleChange = (e) => {
@@ -42,6 +44,8 @@ export default function Cadastro() {
       valor = valor.replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3");
       valor = valor.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
     }
+
+    setFormData((prev) => ({ ...prev, cpf_cnpj: valor }));
   };
 
   const handleCepChange = (e) => {
@@ -73,16 +77,36 @@ export default function Cadastro() {
     return true;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validarDocumento(formData.cpfCnpj)) {
-      alert("Por favor, insira um CPF ou CNPJ válido.");
-      return;
-    }
+    // if (!validarDocumento(formData.cpfCnpj)) {
+    //   alert("Por favor, insira um CPF ou CNPJ válido.");
+    //   return;
+    // }
 
-    console.log("Dados prontos para envio:", formData);
-    alert("Formulário enviado com sucesso!");
+    try{
+      const response = await fetch("http://localhost:3001/api/auth/register", {
+        method : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json()
+
+      if(!response.ok) {
+        alert(`${data.message}`)
+        return;
+      }
+
+      alert("Cadastro realizado com sucesso!")
+      navigate("/")
+    } catch (error){
+      console.error(error)
+      alert(`Erro ao conectar com o servidor: ${error.message}` )
+    }
   };
 
   return (
@@ -105,24 +129,24 @@ export default function Cadastro() {
         <section className="right-panel-register">
           <img src={Logo} alt="Logo" className="logo" />
 
-          <div className="login-form">
+          <form className="login-form" onSubmit={handleSubmit}>
             <h2>Cadastro</h2>
             <h3>Preencha os campos abaixo para criar sua conta</h3>
 
-            <label htmlFor="nome">Nome Completo</label>
+            <label htmlFor="nome_usuario">Nome Completo</label>
             <input
               className="input"
               type="text"
-              id="nome"
+              id="nome_usuario"
               placeholder="Seu nome completo"
               onChange={handleChange}
             />
 
-            <label htmlFor="nome-empresa">Nome Empresa</label>
+            <label htmlFor="nome_empresa">Nome Empresa</label>
             <input
               className="input"
               type="text"
-              id="nome-empresa"
+              id="nome_empresa"
               placeholder="Nome da sua empresa"
               onChange={handleChange}
             />
@@ -136,13 +160,13 @@ export default function Cadastro() {
               onChange={handleChange}
             />
 
-            <label htmlFor="cpf-cnpj">CPF/CNPJ</label>
+            <label htmlFor="cpf_cnpj">CPF/CNPJ</label>
             <input
               className="input"
               type="text"
-              id="cpf-cnpj"
+              id="cpf_cnpj"
               placeholder="000.000.000-00 ou 00.000.000/0000-00"
-              value={formData.cpfCnpj}
+              value={formData.cpf_cnpj}
               maxLength={18}
               onChange={handleCpfCnpjChange}
             />
@@ -191,6 +215,7 @@ export default function Cadastro() {
                   id="cep"
                   placeholder="00000-000"
                   onChange={handleChange}
+                  maxLength={8}
                 />
               </div>
             </div>
@@ -261,6 +286,16 @@ export default function Cadastro() {
             </div>
             </div>
 
+            <label htmlFor="cidade">Cidade</label>
+            <input
+              className="input"
+              type="text"
+              id="cidade"
+              placeholder="Nome da Cidade"
+              value={formData.cidade}
+              onChange={handleChange}
+            />
+
             <label htmlFor="telefone">Telefone</label>
             <input
               className="input"
@@ -284,7 +319,6 @@ export default function Cadastro() {
 
             <button
               type="submit"
-              onClick={handleRegister}
               className="register-button"
             >
               <span>Cadastrar</span>
@@ -294,7 +328,7 @@ export default function Cadastro() {
             <p className="register-text">
               Já é cadastrado? <a href="/">Faça login</a>
             </p>
-          </div>
+          </form>
         </section>
       </div>
     </>

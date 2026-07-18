@@ -45,3 +45,34 @@ export const getDashboardData = async (req, res) => {
         })
     }
 }
+
+export const replacement = async (req, res) => {
+    const { id_produto, id_estoque, quantidade_reposicao } = req.body;
+
+    if(!id_produto || !id_estoque || !quantidade_reposicao || quantidade_reposicao == null)
+        return res.status(400).json({ message: 'Dados inexistentes' })
+
+    try{
+        const result = await pool.query(
+            `
+            UPDATE public.possui_estoque
+            SET quantidade_estoque_atual = quantidade_estoque_atual + $1
+            WHERE id_produto = $2 AND id_estoque = $3
+            `,
+            [quantidade_reposicao, id_produto, id_estoque]
+        )
+
+        if(result.rowCount === 0)
+            return res.status(404).json({ message: "Relação produto/estoque não encontrada"})
+
+        return res.status(200).json({ message: "Reposição realizada com sucesso",
+            data: result.rows[0],
+        })
+
+    } catch (error){
+        return res.status(500).json({
+            message: "Erro ao realizar reposição",
+            error: message.error
+        })
+    }
+}

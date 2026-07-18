@@ -1,14 +1,52 @@
 import './Login.css'
 import Logo from '../assets/logo.png'
 import { useNavigate } from 'react-router-dom'
+import { useState } from 'react';
 
 export default function Login() {
 
   const navigate = useNavigate();
 
-  function handleLogin(){
-    navigate('/dashboard')
-  }
+  // function handleLogin(){
+  //   navigate('/dashboard')
+  // }
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleLogin = async () => {
+    
+
+    try{
+      const response = await fetch("http://localhost:3001/api/auth/login", {
+        method : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json()
+
+      if(!response.ok) {
+        alert(`${data.message}`)
+        return;
+      }
+
+      alert("Login realizado com sucesso!")
+      navigate("/dashboard")
+    } catch (error){
+      console.error(error)
+      alert(`Erro ao conectar com o servidor: ${error.message}` )
+    }
+  };
 
   return (
     <>
@@ -35,9 +73,9 @@ export default function Login() {
             <h3>Entre com suas credenciais para acessar o sistema</h3>
 
             <label htmlFor="email">Email</label>
-            <input className="input" type="email" id="email" placeholder="seuemail@empresa.com" />
+            <input className="input" type="email" id="email" placeholder="seuemail@empresa.com" onChange={handleChange}/>
             <label htmlFor="password">Senha</label>
-            <input className="input" type="password" id="password" placeholder="********" />
+            <input className="input" type="password" id="password" placeholder="********" onChange={handleChange}/>
             <div className="form-options">
               <label htmlFor="remember" className="remember-me">
                 <input type="checkbox" id="remember" />

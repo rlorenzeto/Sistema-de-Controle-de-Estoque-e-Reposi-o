@@ -51,7 +51,7 @@ export const login = async (req, res) => {
 }
 
 export const register = async (req, res) => {
-    const { nome_usuario, nome_empresa, email, cpf, rua, estado, cidade, pais,
+    const { nome_usuario, nome_empresa, email, cpf_cnpj, rua, estado, cidade, pais,
     telefone, cep, bairro, senha } = req.body;
 
     try {
@@ -67,8 +67,8 @@ export const register = async (req, res) => {
       const hashedSenha = await bcrypt.hash(senha, 10);
 
       const result = await pool.query(
-        'INSERT INTO public.usuario (nome_usuario, nome_empresa, email, cpf, rua, estado, cidade, pais, telefone, cep, bairro, senha) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
-        [nome_usuario, nome_empresa, email, cpf, rua, estado, cidade, pais,
+        'INSERT INTO public.usuario (nome_usuario, nome_empresa, email, cpf_cnpj, rua, estado, cidade, pais, telefone, cep, bairro, senha) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
+        [nome_usuario, nome_empresa, email, cpf_cnpj, rua, estado, cidade, pais,
         telefone, cep, bairro, hashedSenha]
       )
 
