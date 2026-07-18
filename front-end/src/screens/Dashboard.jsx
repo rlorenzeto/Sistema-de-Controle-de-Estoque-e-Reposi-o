@@ -1,0 +1,199 @@
+import './Dashboard.css';
+
+import Chart from "react-apexcharts";  
+import { useState } from 'react';
+
+import SideBar from '../components/SideBar'
+import Header from '../components/Header';
+
+import ProductLogo from '../assets/products-icon-dashboard.png'
+import SalesLogo from  '../assets/sales-icon-dashboard.png'
+import SupplierLogo from '../assets/supplier-icon-dashboard.png'
+import LowStockModal from '../components/LowStockModal';
+
+
+export default function Dashboard(){
+
+    const [openModal, setOpenModal] = useState(false)
+
+    const lowStockProducts = [
+        { nome: 'Cabo USB-C 2m', codigo: 'VS-001', atual: 4, total: 20, status: 'Crítico' },
+        { nome: 'Papel A4 500fls', codigo: 'PP-002', atual: 0, total: 20, status: 'Alerta'},
+        { nome: 'Papel A4 500fls', codigo: 'PP-002', atual: 0, total: 20, status: 'Alerta'},
+        { nome: 'Papel A4 500fls', codigo: 'PP-002', atual: 0, total: 20, status: 'Alerta'},
+    ];
+
+  const options = {
+    chart: {
+      type: 'line',
+      toolbar: { show: false }, 
+      zoom: { enabled: false }
+    },
+    stroke: {
+      curve: 'smooth',          
+      width: 3,                 
+      colors: ['#00875A']      
+    },
+    colors: ['#00875A'],        
+    markers: {
+      size: 5,                  
+      colors: ['#00875A'],      
+      strokeColors: '#fff',
+      strokeWidth: 2,
+      hover: { size: 7 }
+    },
+    grid: {
+      show: true,
+      borderColor: '#f1f1f1',
+      xaxis: { lines: { show: false } },
+      yaxis: { lines: { show: true } }
+    },
+    xaxis: {
+      categories: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+      labels: {
+        style: { colors: '#777', fontSize: '12px' }
+      },
+      axisBorder: { show: false },       
+      axisTicks: { show: false }      
+    },
+    yaxis: {
+      min: 0,
+      max: 140,           
+      tickAmount: 4,                    
+      labels: {
+        style: { colors: '#777', fontSize: '12px' }
+      }
+    },
+    tooltip: { enabled: true },
+    legend: { show: false }
+  };
+
+  const series = [
+    {
+      name: 'Qtde de Itens',
+      data: [30, 40, 45, 50, 49, 60, 70, 91]
+    }
+  ];
+    
+  
+    return(
+        <>
+        <div className="dashboard-container">
+            <SideBar/>
+            <div className="dashboard-panel">
+                <Header title="Dashboard"/>
+                <div className="dashboard-informations">
+                    <div className="dashboard-cards">
+                        <div className="total-products">
+                            <img src={ProductLogo} alt='Logo de Produtos Dashboard' className='product-icon'></img>
+                            <h1>1352</h1>
+                            <h2>Total de Itens</h2>
+                            <hr></hr>
+                            <span>+23 itens adicionados nos últimos dias</span>
+                        </div>
+                        <div className="total-sales">
+                            <img src={SalesLogo} alt='Logo de Vendas Dashboard' className='sales-icon'></img>
+                            <h1>1352</h1>
+                            <h2>Total de Vendas</h2>
+                            <hr></hr>
+                            <span>+27 vendas realizadas nos últimos dias</span>
+                        </div>
+                    </div>
+
+                    <div className="dashboard-chart">
+                        <div className="chart-header">
+                            <div className="chart-title-group">
+                                <h3>Evolução de Vendas</h3>
+                                <p>Últimos 7 dias</p>
+                            </div>
+                            <div className="chart-legend">
+                                <span className="legend-dot"></span> Vendas
+                            </div>
+                        </div>
+                            
+                        <Chart
+                            options={options}
+                            series={series}
+                            type="line"
+                            height={160}
+                        />
+                
+                    </div>
+
+                    <div className="dashboard-cards">
+
+                        <div className='stock-card'>
+                            <div className="stock-header">
+                                <div className="stock-title-group">
+                                    <h3>Estoque Baixo</h3>
+                                    <p>6 itens requerem atenção</p>
+                                </div>
+                            </div>
+
+                            <div className='stock-list'>
+                                <div className='list-header'>
+                                    <span>Produto</span>
+                                    <span>Estoque</span>
+                                    <span>Status</span>
+                                </div>
+
+                                {lowStockProducts.slice(0,2).map((item)=>{
+                                    const percent = (item.atual / item.total) * 100;
+                                    
+                                    return(
+                                        <>
+                                        <div className='list-products' key={item.codigo}>
+                                            <div className='product-info'>
+                                                <h2>{item.nome}</h2>
+                                                <h3>{item.codigo}</h3>
+                                            </div>
+
+                                    
+                                            <div className='product-stock'> 
+                                                <div className='stock-bar'>
+                                                    <div className='stock-fill' style={{ width: `${percent}%`, backgroundColor: item.status === "Crítico" ? "#D4183D" : "#F59E0B" }}> </div>
+                                                </div>
+                                                <span>{item.atual}/{item.total}</span>
+                                            </div>
+
+                                            <h2 className='product-status' style={{color: item.status === "Crítico" ? "#B91C3D" : "#92400E", backgroundColor: item.status === "Crítico" ? "#FDE8EC" : "#FEF3C7"}}> 
+                                                {item.status}
+                                            </h2>
+
+                                        </div>  
+                                        </>
+                                        
+                                    );
+                                })}
+
+                            </div>
+
+                            <button className='see-more-btn' onClick={()=> setOpenModal(true)}>
+                                Ver Mais
+                            </button>
+
+                            {openModal && (
+                                <LowStockModal
+                                    openModal={openModal}
+                                    setOpenModal={setOpenModal}
+                                    lowStockProducts={lowStockProducts}
+                                />
+                            )}
+                        </div>
+
+                        <div className='supplier-card'>
+                            <img src={SupplierLogo} alt='Logo de Fornecedores Dashboard' className='supplier-icon'></img>
+                            <h1>50</h1>
+                            <h2>Total de Fornecedores</h2>
+                            <hr></hr>
+                            <span>+23 fornecedores cadastrados nos últimos dias</span>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        </>
+    );
+}

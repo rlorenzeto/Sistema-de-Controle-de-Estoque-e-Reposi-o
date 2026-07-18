@@ -1,0 +1,306 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.dashboard-container {
+
+  min-height: 100vh;
+  width: 100%;
+}
+
+.dashboard-informations{
+  display: flex;
+  flex-direction: column;
+  gap:20px;
+  width: 80%;
+  margin: 20px auto;
+}
+
+.dashboard-panel {
+  margin-left: 260px;
+  width: calc(100% - 260px);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #E6F2EC;
+}
+
+.dashboard-cards{
+  display: flex;
+  justify-content: space-between;
+  gap:30px;
+  text-align: left;
+  width: 100%;
+  height: auto;
+}
+
+.dashboard-cards h1{
+  font-weight: 500;
+}
+
+.dashboard-cards h2{
+  font-size: 14px;
+  font-weight: 500;
+  color: #5A7A6A;
+}
+
+.dashboard-cards span{
+  font-size: 14px;
+  font-weight: 500;
+  color: #5A7A6A;
+}
+
+.total-products, .total-sales, .stock-card, .supplier-card{
+  flex: 1 1 250px;
+  padding: 20px;
+  background-color: white;
+  border-radius: 31px;
+}
+
+.dashboard-chart {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background-color: white;
+  border-radius: 31px;
+  padding: 24px;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.chart-title-group h3 {
+  margin: 0;
+  color: #104F3A;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.chart-title-group p {
+  margin: 4px 0 0 0;
+  color: #5A7A6A;
+  font-size: 13px;
+}
+
+.chart-legend {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #5A7A6A;
+  font-weight: 500;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #00875A;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+hr{
+  margin:10px 0;
+  background: rgba(0, 0, 0, 0.30);
+}
+
+.product-icon{
+  background: rgba(0, 129, 85, 0.09);
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.sales-icon{
+  background: rgba(212, 24, 61, 0.08);
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.stock-card{
+  flex: 2 1 400px;
+  padding: 20px;
+  background-color: white;
+  border-radius: 31px;
+}
+
+.stock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.stock-title-group h3 {
+  margin: 0;
+  color: #104F3A;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.stock-title-group p {
+  margin: 4px 0 0 0;
+  color: #5A7A6A;
+  font-size: 13px;
+}
+
+.stock-list{
+  display: flex;
+  flex-direction: column;
+}
+
+.stock-list span{
+  padding: 5px;
+  color: #5A7A6A;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 400;
+}
+
+.stock-list h2{
+  color: #0D2B20;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.stock-list h3{
+  color: #5A7A6A;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 400;
+}
+
+.list-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: rgba(230, 242, 236, 0.50);
+}
+.list-products{
+  display: flex;
+  border-bottom: 0.4px solid rgba(0, 0, 0, 0.30);
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.supplier-icon{
+  background: rgba(0, 129, 85, 0.09);
+  padding: 10px;
+  border-radius: 10px;
+}
+
+
+
+.product-info h2 {
+  font-size: 14px;
+  color: #111827;
+  margin: 0;
+}
+
+.product-info h3 {
+  font-size: 12px;
+  color: #9CA3AF;
+  margin: 4px 0 0;
+  font-weight: 500;
+}
+
+.product-stock {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.product-status{
+  margin: 6px 0px;
+  padding: 3px 5px;
+  text-align: center;
+  border-radius: 31px;
+}
+
+.stock-bar {
+  width: 200px;
+  height: 4px;
+  background: #E5E7EB;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.stock-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.product-stock span {
+  font-size: 12px;
+  color: #6B7280;
+  min-width: 34px;
+}
+
+.see-more-btn{
+  display: block;
+  margin: 10px 0 0 auto;
+  padding: 0;
+  background: none;
+  border: none;
+  color: #5A7A6A;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+@media (max-width: 1024px){
+  .dashboard-informations{
+    width: 92%;
+  }
+
+  .dashboard-panel{
+    flex: 1;
+  }
+
+  .stock-card{
+    flex: 1 1 100%;
+  }
+
+  .total-products,
+  .total-sales,
+  .supplier-card{
+    flex: 1 1 calc(50% - 10px);
+  }
+}
+
+@media (max-width: 768px){
+  .dashboard-container{
+    flex-direction: column;
+  }
+
+  .dashboard-informations{
+    width: 95%;
+    margin: 16px auto;
+    gap: 16px;
+  }
+
+  .dashboard-cards{
+    flex-direction: column;
+  }
+
+  .total-products,
+  .total-sales,
+  .stock-card,
+  .supplier-card{
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .chart-header,
+  .stock-header{
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+}
