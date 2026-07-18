@@ -1,6 +1,12 @@
 .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;          /* melhor que 15% pra sidebar fixa */
+  height: 100vh;
+  overflow-y: auto;
+
   display: flex;
-  flex: 0 0 15%;
   align-items: center;
   flex-direction: column;
   justify-content: space-between;

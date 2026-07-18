@@ -73,9 +73,9 @@ export default function Login() {
             <h3>Entre com suas credenciais para acessar o sistema</h3>
 
             <label htmlFor="email">Email</label>
-            <input className="input" type="email" id="email" placeholder="seuemail@empresa.com" onChange={handleChange}/>
+            <input className="input" type="email" id="email" placeholder="seuemail@empresa.com" onChange={handleChange} required/>
             <label htmlFor="password">Senha</label>
-            <input className="input" type="password" id="password" placeholder="********" onChange={handleChange}/>
+            <input className="input" type="password" id="password" placeholder="********" onChange={handleChange} required/>
             <div className="form-options">
               <label htmlFor="remember" className="remember-me">
                 <input type="checkbox" id="remember" />
