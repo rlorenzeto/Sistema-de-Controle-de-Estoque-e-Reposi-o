@@ -23,61 +23,13 @@ export default function Dashboard(){
         totalProductsStock: 0,
         totalSales: 0,
         totalSuppliers: 0,
-        lowStock: []
+        lowStock: [],
+        salesEvolution: [],
+        recentProducts: 0,
+        recentSales: 0,
+        recentSuppliers: 0
     });
     const [loadingDashboard, setLoadingDashboard] = useState(true);
-
-    const options = {
-        chart: {
-        type: 'line',
-        toolbar: { show: false }, 
-        zoom: { enabled: false }
-        },
-        stroke: {
-        curve: 'smooth',          
-        width: 3,                 
-        colors: ['#00875A']      
-        },
-        colors: ['#00875A'],        
-        markers: {
-        size: 5,                  
-        colors: ['#00875A'],      
-        strokeColors: '#fff',
-        strokeWidth: 2,
-        hover: { size: 7 }
-        },
-        grid: {
-        show: true,
-        borderColor: '#f1f1f1',
-        xaxis: { lines: { show: false } },
-        yaxis: { lines: { show: true } }
-        },
-        xaxis: {
-        categories: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
-        labels: {
-            style: { colors: '#777', fontSize: '12px' }
-        },
-        axisBorder: { show: false },       
-        axisTicks: { show: false }      
-        },
-        yaxis: {
-        min: 0,
-        max: 140,           
-        tickAmount: 4,                    
-        labels: {
-            style: { colors: '#777', fontSize: '12px' }
-        }
-        },
-        tooltip: { enabled: true },
-        legend: { show: false }
-    };
-
-    const series = [
-        {
-        name: 'Qtde de Itens',
-        data: [30, 40, 45, 50, 49, 60, 70, 91]
-        }
-    ];
   
     async function handleReplacement({ id_produto, id_estoque, quantidade_reposicao }){
         try{
@@ -137,7 +89,11 @@ export default function Dashboard(){
                 totalProductsStock: data.totalProductsStock ?? 0,
                 totalSales: data.totalSales ?? 0,
                 totalSuppliers: data.totalSuppliers ?? 0,
-                lowStock: Array.isArray(data.lowStock) ? data.lowStock : []
+                lowStock: Array.isArray(data.lowStock) ? data.lowStock : [],
+                salesEvolution: Array.isArray(data.salesEvolution) ? data.salesEvolution : [], 
+                recentProducts: data.recentProducts ?? 0,
+                recentSales: data.recentSales ?? 0,
+                recentSuppliers: data.recentSuppliers ?? 0
             });
         } catch(error){
             alert(`Erro ao carregar dashboard ${error.message}`)
@@ -159,6 +115,63 @@ export default function Dashboard(){
         status: item.status
     }))
 
+    const chartCategories = (dashboardData.salesEvolution ?? []).map((item) => {
+        const data = new Date(item.dia)
+        return data.toLocaleDateString("pt-BR", { weekday: "short" });
+    })
+
+    const chartSeries = [
+        {
+            name: "Vendas",
+            data: (dashboardData.salesEvolution ?? []).map((item) => Number(item.total_vendas))
+        }
+    ]
+
+    const options = {
+        chart: {
+        type: 'line',
+        toolbar: { show: false }, 
+        zoom: { enabled: false }
+        },
+        stroke: {
+        curve: 'smooth',          
+        width: 3,                 
+        colors: ['#00875A']      
+        },
+        colors: ['#00875A'],        
+        markers: {
+        size: 5,                  
+        colors: ['#00875A'],      
+        strokeColors: '#fff',
+        strokeWidth: 2,
+        hover: { size: 7 }
+        },
+        grid: {
+        show: true,
+        borderColor: '#f1f1f1',
+        xaxis: { lines: { show: false } },
+        yaxis: { lines: { show: true } }
+        },
+        xaxis: {
+        categories: chartCategories,
+        labels: {
+            style: { colors: '#777', fontSize: '12px' }
+        },
+        axisBorder: { show: false },       
+        axisTicks: { show: false }      
+        },
+        yaxis: {
+        min: 0,
+        max: 140,           
+        tickAmount: 4,                    
+        labels: {
+            style: { colors: '#777', fontSize: '12px' }
+        }
+        },
+        tooltip: { enabled: true },
+        legend: { show: false }
+    };
+
     return(
         <>
         <div className="dashboard-container">
@@ -172,14 +185,14 @@ export default function Dashboard(){
                             <h1>{dashboardData.totalProductsStock}</h1>
                             <h2>Total de Itens</h2>
                             <hr></hr>
-                            <span>+23 itens adicionados nos últimos dias</span>
+                            <span>+{dashboardData.recentProducts} itens adicionados nos últimos dias</span>
                         </div>
                         <div className="total-sales">
                             <img src={SalesLogo} alt='Logo de Vendas Dashboard' className='sales-icon'></img>
                             <h1>{dashboardData.totalSales}</h1>
                             <h2>Total de Vendas</h2>
                             <hr></hr>
-                            <span>+27 vendas realizadas nos últimos dias</span>
+                            <span>+{dashboardData.recentSales} vendas realizadas nos últimos dias</span>
                         </div>
                     </div>
 
@@ -196,7 +209,7 @@ export default function Dashboard(){
                             
                         <Chart
                             options={options}
-                            series={series}
+                            series={chartSeries}
                             type="line"
                             height={160}
                         />
@@ -283,7 +296,7 @@ export default function Dashboard(){
                             <h1>{dashboardData.totalSuppliers}</h1>
                             <h2>Total de Fornecedores</h2>
                             <hr></hr>
-                            <span>+23 fornecedores cadastrados nos últimos dias</span>
+                            <span>+{dashboardData.totalSuppliers} fornecedores cadastrados nos últimos dias</span>
                         </div>
 
                     </div>

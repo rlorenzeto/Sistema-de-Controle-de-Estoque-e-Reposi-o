@@ -32,11 +32,52 @@ export const getDashboardData = async (req, res) => {
             LIMIT 5
         `)
 
+        const salesEvolution = await pool.query(`
+            WITH dias AS (
+                SELECT generate_series(
+                current_date - interval '6 days',
+                current_date,
+                interval '1 day'
+                )::date AS dia
+            )
+            SELECT
+                dias.dia,
+                COALESCE(COUNT(v.id_venda), 0) AS total_vendas,
+                COALESCE(SUM(v.valor_venda), 0) AS valor_total
+            FROM dias
+            LEFT JOIN public.venda v
+                ON v.data_venda::date = dias.dia
+            GROUP BY dias.dia
+            ORDER BY dias.dia
+        `)
+
+        const recentProducts = await pool.query(`
+            SELECT COUNT(*) AS total
+            FROM public.produto
+            WHERE data_cadastro >= current_date - interval '6 days'
+        `);
+
+        const recentSales = await pool.query(`
+            SELECT COUNT(*) AS total
+            FROM public.venda
+            WHERE data_venda >= current_date - interval '6 days'
+        `);
+
+        const recentSuppliers = await pool.query(`
+            SELECT COUNT(*) AS total
+            FROM public.fornecedor
+            WHERE data_cadastro >= current_date - interval '6 days'
+        `);
+
         return res.status(200).json({
             totalProductsStock: totalProductsStock.rows[0].total,
             totalSales: totalSales.rows[0].total,
             totalSuppliers: totalSuppliers.rows[0].total,
-            lowStock: lowStock.rows
+            lowStock: lowStock.rows,
+            salesEvolution: salesEvolution.rows,
+            recentProducts: recentProducts.rows[0].total,
+            recentSales: recentSales.rows[0].total,
+            recentSuppliers: recentSuppliers.rows[0].total
         })
     } catch (error){
         return res.status(500).json({

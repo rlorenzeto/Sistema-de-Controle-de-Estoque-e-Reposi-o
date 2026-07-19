@@ -81,6 +81,9 @@ CREATE TABLE fornecedor (
 	CONSTRAINT fornecedor_pk PRIMARY KEY (id_fornecedor)
 );
 
+ALTER TABLE public.fornecedor
+ADD COLUMN data_cadastro date;
+
 -- pedido definição
 
 -- Drop table
