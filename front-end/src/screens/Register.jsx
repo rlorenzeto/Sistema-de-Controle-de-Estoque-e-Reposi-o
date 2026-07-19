@@ -307,13 +307,13 @@ export default function Cadastro() {
               maxLength={15}
             />
 
-            <label htmlFor="password">Senha</label>
+            <label htmlFor="senha">Senha</label>
             <input
               className="input"
               type="password"
-              id="password"
+              id="senha"
               placeholder="********"
-              value={formData.password}
+              value={formData.senha}
               onChange={handleChange}
             />
 
