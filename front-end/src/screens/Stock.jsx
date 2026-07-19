@@ -6,6 +6,7 @@ import CardResumo from "../components/cardResumo";
 import TabelaEstoque from "../components/TabelaEstoque";
 import { FiSearch } from "react-icons/fi";
 import OrderModal from "../components/OrderModal";
+import ItemModal from "../components/ItemModal";
 
 
 export default function Stock(){
@@ -38,7 +39,7 @@ export default function Stock(){
                 </main>
                 </div>               
             </div>
-            <OrderModal isOpen={isModalOpen} onClose={handleCloseModal} />
+            <ItemModal isOpen={isModalOpen} onClose={handleCloseModal} />
         </>
     );
 }
