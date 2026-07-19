@@ -3,7 +3,7 @@ import "./OrderModal.css";
 import { saleService } from "../services/saleService";
 import { productService } from "../services/productService";
 
-export default function OrderModal({ isOpen, onClose }) {
+export default function EditOrderModal({ isOpen, onClose, venda }) {
     const [nomeCliente, setNomeCliente] = useState("");
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -11,6 +11,13 @@ export default function OrderModal({ isOpen, onClose }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [searchResults, setSearchResults] = useState([]);
     const [showResults, setShowResults] = useState(false);
+
+    useEffect(() => {
+        if (venda && isOpen) {
+            setNomeCliente(venda.descricao || "");
+            setItems(venda.itens || []);
+        }
+    }, [venda, isOpen]);
 
     useEffect(() => {
         const searchProducts = async () => {
@@ -75,9 +82,14 @@ export default function OrderModal({ isOpen, onClose }) {
         return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     };
 
-    const handleConfirmarPedido = async () => {
+    const handleSalvarEdicao = async () => {
         if (items.length === 0) {
             setError('Adicione pelo menos um item ao pedido');
+            return;
+        }
+
+        if (!venda?.id_venda) {
+            setError('ID da venda não encontrado');
             return;
         }
 
@@ -94,7 +106,7 @@ export default function OrderModal({ isOpen, onClose }) {
                 }))
             };
 
-            await saleService.create(pedidoData);
+            await saleService.update(venda.id_venda, pedidoData);
             
             setNomeCliente('');
             setItems([]);
@@ -102,8 +114,8 @@ export default function OrderModal({ isOpen, onClose }) {
             
             window.location.reload();
         } catch (err) {
-            console.error('Erro ao criar pedido:', err);
-            setError('Erro ao criar pedido. Tente novamente.');
+            console.error('Erro ao atualizar pedido:', err);
+            setError('Erro ao atualizar pedido. Tente novamente.');
         } finally {
             setLoading(false);
         }
@@ -116,7 +128,7 @@ export default function OrderModal({ isOpen, onClose }) {
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
                     <div className="header-title">
-                        <h2>Novo Pedido</h2>
+                        <h2>Editar Pedido</h2>
                         <span className="badge-rascunho">Rascunho</span>
                     </div>
                     <button className="close-btn" onClick={onClose}>✕</button>
@@ -213,8 +225,8 @@ export default function OrderModal({ isOpen, onClose }) {
                     <button type="button" onClick={onClose} className="btn-cancelar" disabled={loading}>
                         Cancelar
                     </button>
-                    <button type="button" onClick={handleConfirmarPedido} className="btn-confirmar" disabled={loading}>
-                        {loading ? 'Salvando...' : 'Confirmar Pedido'}
+                    <button type="button" onClick={handleSalvarEdicao} className="btn-confirmar" disabled={loading}>
+                        {loading ? 'Salvando...' : 'Salvar Alterações'}
                     </button>
                 </div>
             </div>
