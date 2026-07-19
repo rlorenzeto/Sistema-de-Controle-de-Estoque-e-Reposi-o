@@ -1,12 +1,12 @@
 import { Router } from 'express'
-import { createSale, getSales, getSaleById, deleteSale, incrementProduct, decrementProduct, updateSale, addProductToSale, updateProductInSale } from '../controllers/SaleController.js'
+import { createSale, getSales, getSaleById, deleteSale, incrementProduct, decrementProduct, updateSale, addProductToSale, updateProductInSale, updateSaleWithProducts } from '../controllers/SaleController.js'
 
 const router = Router()
 
 router.get('/', getSales)
 router.get('/:id', getSaleById)
 router.post('/', createSale)
-router.put('/:id', updateSale)
+router.put('/:id', updateSaleWithProducts)
 router.delete('/:id', deleteSale)
 router.post('/:id_venda/produto', addProductToSale)
 router.put('/:id_venda/produto/:id_produto', updateProductInSale)

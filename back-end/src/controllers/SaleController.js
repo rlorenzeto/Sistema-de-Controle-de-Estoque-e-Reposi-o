@@ -14,7 +14,7 @@ export const createSale = async (req, res) => {
 
     const insertSale = await client.query(
       `INSERT INTO public.venda (descricao, data_venda, id_usuario, valor_venda)
-       VALUES ($1, $2, $3, $4)
+       VALUES ($1, COALESCE($2, CURRENT_DATE), $3, $4)
        RETURNING id_venda`,
       [descricao || null, data_venda || null, id_usuario || null, valor_venda || null]
     )
@@ -65,15 +65,22 @@ export const createSale = async (req, res) => {
 }
 
 export const getSales = async (req, res) => {
-    try{
-        const result = await pool.query(
-            'SELECT id_venda, descricao, data_venda, id_usuario, valor_venda FROM public.venda ORDER BY data_venda DESC'
-        )
+  try {
+    const result = await pool.query(`
+  SELECT 
+    venda.id_venda,
+    venda.descricao,
+    venda.data_venda,
+    venda.valor_venda,
+    COUNT(possui_venda.id_produto) as total_itens
+  FROM venda 
+  LEFT JOIN possui_venda ON venda.id_venda = possui_venda.id_venda
+  GROUP BY venda.id_venda
+`)
+    return res.status(200).json(result.rows) //array de linhas q o bd devolveu
+  }
 
-        return res.status(200).json(result.rows) //array de linhas q o bd devolveu
-    }
-
-    catch (error) {
+  catch (error) {
     return res.status(500).json({
       message: 'Erro ao buscar vendas',
       error: error.message
@@ -82,20 +89,46 @@ export const getSales = async (req, res) => {
 }
 
 export const getSaleById = async (req, res) => {
-    const {id} = req.params 
+  const { id } = req.params
 
-    try{
-        const result = await pool.query(
-            'SELECT id_venda, descricao, data_venda, id_usuario, valor_venda FROM public.venda WHERE id_venda = $1',
-            [id]
-        )
+  try {
+    const vendaResult = await pool.query(
+      'SELECT id_venda, descricao, data_venda, id_usuario, valor_venda FROM public.venda WHERE id_venda = $1',
+      [id]
+    )
 
-        if(result.rows.length === 0){
-            return res.status(404).json({message: 'Venda não encontrada'})
-        }
+    if (vendaResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Venda não encontrada' })
+    }
 
-        return res.status(200).json(resultado.rows[0])
-    }   catch (error) {
+    const venda = vendaResult.rows[0]
+
+    const produtosResult = await pool.query(
+      `SELECT 
+        pv.id_produto,
+        pv.quantidade_venda,
+        p.nome_produto,
+        p.preco_venda,
+        p.categoria
+      FROM public.possui_venda pv
+      INNER JOIN public.produto p ON pv.id_produto = p.id_produto
+      WHERE pv.id_venda = $1`,
+      [id]
+    )
+
+    const itens = produtosResult.rows.map(produto => ({
+      id: produto.id_produto,
+      nome: produto.nome_produto,
+      preco: produto.preco_venda,
+      quantidade: produto.quantidade_venda,
+      categoria: produto.categoria
+    }))
+
+    return res.status(200).json({
+      ...venda,
+      itens
+    })
+  } catch (error) {
     return res.status(500).json({
       message: 'Erro ao buscar venda',
       error: error.message
@@ -217,7 +250,7 @@ export const decrementProduct = async (req, res) => {
 
     const checkProduct = await client.query(
       'SELECT quantidade_venda FROM public.possui_venda WHERE id_venda = $1 AND id_produto = $2',
-      [id_venda, id_produto] 
+      [id_venda, id_produto]
     )
 
     //verifica se o produto existe na venda
@@ -407,6 +440,87 @@ export const updateProductInSale = async (req, res) => {
     await client.query('ROLLBACK')
     return res.status(500).json({
       message: 'Erro ao atualizar produto na venda',
+      error: error.message
+    })
+  } finally {
+    client.release()
+  }
+}
+
+// 
+export const updateSaleWithProducts = async (req, res) => {
+  const { id } = req.params
+  const { descricao, data_venda, valor_venda, produtos } = req.body
+
+  const client = await pool.connect()
+
+  try {
+    await client.query('BEGIN')
+
+    const checkSale = await client.query(
+      'SELECT * FROM public.venda WHERE id_venda = $1',
+      [id]
+    )
+
+    if (checkSale.rows.length === 0) {
+      await client.query('ROLLBACK')
+      return res.status(404).json({ message: 'Venda não encontrada' })
+    }
+
+    const vendaAtual = checkSale.rows[0]
+
+    const novaDescricao = descricao !== undefined ? descricao : vendaAtual.descricao
+    const novaData = data_venda !== undefined ? data_venda : vendaAtual.data_venda
+    const novoValor = valor_venda !== undefined ? valor_venda : vendaAtual.valor_venda
+
+    await client.query(
+      `UPDATE public.venda 
+       SET descricao = $1, data_venda = $2, valor_venda = $3 
+       WHERE id_venda = $4`,
+      [novaDescricao, novaData, novoValor, id]
+    )
+
+    if (produtos && Array.isArray(produtos)) {
+      for (const item of produtos) {
+        const { id_produto, quantidade_venda } = item
+
+        if (!id_produto || !quantidade_venda || quantidade_venda <= 0) {
+          await client.query('ROLLBACK')
+          return res.status(400).json({
+            message: 'Cada produto precisa ter id_produto e quantidade_venda válidos'
+          })
+        }
+
+        const checkProduct = await client.query(
+          'SELECT * FROM public.possui_venda WHERE id_venda = $1 AND id_produto = $2',
+          [id, id_produto]
+        )
+
+        if (checkProduct.rows.length > 0) {
+          await client.query(
+            'UPDATE public.possui_venda SET quantidade_venda = $1 WHERE id_venda = $2 AND id_produto = $3',
+            [quantidade_venda, id, id_produto]
+          )
+        } else {
+          await client.query(
+            `INSERT INTO public.possui_venda (id_venda, id_produto, quantidade_venda)
+             VALUES ($1, $2, $3)`,
+            [id, id_produto, quantidade_venda]
+          )
+        }
+      }
+    }
+
+    await client.query('COMMIT')
+
+    return res.status(200).json({
+      message: 'Venda atualizada com sucesso',
+      id_venda: id
+    })
+  } catch (error) {
+    await client.query('ROLLBACK')
+    return res.status(500).json({
+      message: 'Erro ao atualizar venda',
       error: error.message
     })
   } finally {

@@ -1,13 +1,63 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./Sale.css";
 import SideBar from "../components/SideBar";
 import TabelaVendas from "../components/TabelaVendas";
 import Header from "../components/Header";
 import CardResumo from "../components/cardResumo";
 import OrderModal from "../components/OrderModal";
+import { saleService } from "../services/saleService";
 
 export default function Sale() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [vendas, setVendas] = useState([]);
+  const [stats, setStats] = useState({
+    totalVendas: 0,
+    pedidosPendentes: 0,
+    ticketMedio: 0
+  });
+
+  useEffect(() => {
+    loadVendas();
+  }, []);
+
+  const loadVendas = async () => {
+    try {
+      const data = await saleService.getAll();
+      setVendas(data);
+      calcularEstatisticas(data);
+    } catch (err) {
+      console.error('Erro ao carregar vendas:', err);
+    }
+  };
+
+  const calcularEstatisticas = (vendasData) => {
+    if (!vendasData || vendasData.length === 0) {
+      setStats({
+        totalVendas: 0,
+        pedidosPendentes: 0,
+        ticketMedio: 0
+      });
+      return;
+    }
+
+    // Calcular total de vendas
+    const total = vendasData.reduce((acc, venda) => acc + parseFloat(venda.valor_venda || 0), 0);
+    // Calcular ticket médio
+    const media = total / vendasData.length;
+
+    setStats({
+      totalVendas: total,
+      pedidosPendentes: 0,
+      ticketMedio: media
+    });
+  };
+
+  const formatarMoeda = (valor) => {
+    return valor.toLocaleString('pt-BR', { 
+      style: 'currency', 
+      currency: 'BRL' 
+    });
+  };
 
   const handleNovoPedido = () => {
     setIsModalOpen(true);
@@ -15,6 +65,13 @@ export default function Sale() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    // Recarrega as vendas após fechar o modal (caso tenha criado um pedido)
+    loadVendas();
+  };
+
+  const handleVendaDeleted = () => {
+    // Recarrega as vendas e recalcula as estatísticas
+    loadVendas();
   };
 
   return (
@@ -29,11 +86,11 @@ export default function Sale() {
           />
           <main className="sale-main">
             <div className="sale-cards">
-              <CardResumo title="Total de Vendas" value="R$ 1.500,00"/>
-              <CardResumo title="Pedidos Pendentes" value="8"/>
-              <CardResumo title="Ticket Médio" value="R$ 70,00"/>
+              <CardResumo title="Total de Vendas" value={formatarMoeda(stats.totalVendas)}/>
+              <CardResumo title="Pedidos Pendentes" value={stats.pedidosPendentes}/>
+              <CardResumo title="Ticket Médio" value={formatarMoeda(stats.ticketMedio)}/>
             </div>
-            <TabelaVendas/>
+            <TabelaVendas onVendaDeleted={handleVendaDeleted} />
           </main>
         </div>
       </div>

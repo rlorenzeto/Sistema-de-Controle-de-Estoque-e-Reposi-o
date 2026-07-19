@@ -149,6 +149,30 @@ export const getProductById = async (req, res) => {
   }
 }
 
+export const getProductByName = async (req, res) => {
+  const { nome } = req.query
+
+  if (!nome || nome.trim() === '') {
+    return res.status(400).json({ message: 'Nome do produto é obrigatório' })
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT * FROM public.produto 
+       WHERE LOWER(nome_produto) LIKE LOWER($1)
+       ORDER BY nome_produto`,
+      [`%${nome}%`]
+    )
+
+    return res.status(200).json(result.rows)
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Erro ao buscar produtos por nome',
+      error: error.message
+    })
+  }
+}
+
 export const updateProduct = async (req, res) => {
   const { id } = req.params
   const { 
