@@ -1,6 +1,6 @@
 import './LowStockModal.css'
 
-function LowStockModal({ openModal, setOpenModal, lowStockProducts}){
+function LowStockModal({ openModal, setOpenModal, lowStockProducts, onReplacement, handleOpenReplacementModal}){
     return(
         <div className='stock-modal-overlay'> 
             <div className='stock-modal'> 
@@ -24,13 +24,14 @@ function LowStockModal({ openModal, setOpenModal, lowStockProducts}){
                         <span>Produto</span>
                         <span>Estoque</span>
                         <span>Status</span>
+                        <span>Ação</span>
                     </div>
                      
                     {lowStockProducts.map((item) => {
                         const percent = (item.atual / item.total) * 100;
                     
                         return(
-                            <div className='list-products' key={item.codigo}>
+                            <div className='list-modal-row' key={item.codigo}>
                                 <div className='product-info'> 
                                     <h2>{item.nome}</h2>
                                     <h3>{item.codigo}</h3>
@@ -46,6 +47,10 @@ function LowStockModal({ openModal, setOpenModal, lowStockProducts}){
                                 <h2 className='product-status' style={{color: item.status === "Crítico" ? "#B91C3D" : "#92400E", backgroundColor: item.status === "Crítico" ? "#FDE8EC" : "#FEF3C7"}}> 
                                     {item.status}
                                 </h2>
+
+                                <button onClick={() => handleOpenReplacementModal(item)} className="replace-btn">
+                                    Repor
+                                </button>
                             </div>
                         );
                     })}

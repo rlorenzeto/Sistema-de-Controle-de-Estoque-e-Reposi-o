@@ -22,8 +22,6 @@ export default function Login() {
   };
 
   const handleLogin = async () => {
-    
-
     try{
       const response = await fetch("http://localhost:3001/api/auth/login", {
         method : "POST",
@@ -39,6 +37,9 @@ export default function Login() {
         alert(`${data.message}`)
         return;
       }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("usuario", JSON.stringify(data.usuario));
 
       alert("Login realizado com sucesso!")
       navigate("/dashboard")
@@ -82,7 +83,7 @@ export default function Login() {
                 <span>Manter conectado</span>
               </label>
 
-              <a href='/' className="missing-password">
+              <a href='/forgot-password' className="missing-password">
                 Esqueci minha senha
               </a>
             </div>

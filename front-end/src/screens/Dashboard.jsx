@@ -1,7 +1,7 @@
 import './Dashboard.css';
 
 import Chart from "react-apexcharts";  
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import SideBar from '../components/SideBar'
 import Header from '../components/Header';
@@ -10,72 +10,155 @@ import ProductLogo from '../assets/products-icon-dashboard.png'
 import SalesLogo from  '../assets/sales-icon-dashboard.png'
 import SupplierLogo from '../assets/supplier-icon-dashboard.png'
 import LowStockModal from '../components/LowStockModal';
+import ReplacementModal from '../components/ReplacementModal';
 
 
 export default function Dashboard(){
 
-    const [openModal, setOpenModal] = useState(false)
+    const [openLowStockModal, setOpenLowStockModal] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [openReplacementModal, setOpenReplacementModal] = useState(false);
+    const [loadingReplacement, setLoadingReplacement] = useState(false);
+    const [dashboardData, setDashboardData] = useState({
+        totalProductsStock: 0,
+        totalSales: 0,
+        totalSuppliers: 0,
+        lowStock: []
+    });
+    const [loadingDashboard, setLoadingDashboard] = useState(true);
 
-    const lowStockProducts = [
-        { nome: 'Cabo USB-C 2m', codigo: 'VS-001', atual: 4, total: 20, status: 'Crítico' },
-        { nome: 'Papel A4 500fls', codigo: 'PP-002', atual: 0, total: 20, status: 'Alerta'},
-        { nome: 'Papel A4 500fls', codigo: 'PP-002', atual: 0, total: 20, status: 'Alerta'},
-        { nome: 'Papel A4 500fls', codigo: 'PP-002', atual: 0, total: 20, status: 'Alerta'},
+    const options = {
+        chart: {
+        type: 'line',
+        toolbar: { show: false }, 
+        zoom: { enabled: false }
+        },
+        stroke: {
+        curve: 'smooth',          
+        width: 3,                 
+        colors: ['#00875A']      
+        },
+        colors: ['#00875A'],        
+        markers: {
+        size: 5,                  
+        colors: ['#00875A'],      
+        strokeColors: '#fff',
+        strokeWidth: 2,
+        hover: { size: 7 }
+        },
+        grid: {
+        show: true,
+        borderColor: '#f1f1f1',
+        xaxis: { lines: { show: false } },
+        yaxis: { lines: { show: true } }
+        },
+        xaxis: {
+        categories: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+        labels: {
+            style: { colors: '#777', fontSize: '12px' }
+        },
+        axisBorder: { show: false },       
+        axisTicks: { show: false }      
+        },
+        yaxis: {
+        min: 0,
+        max: 140,           
+        tickAmount: 4,                    
+        labels: {
+            style: { colors: '#777', fontSize: '12px' }
+        }
+        },
+        tooltip: { enabled: true },
+        legend: { show: false }
+    };
+
+    const series = [
+        {
+        name: 'Qtde de Itens',
+        data: [30, 40, 45, 50, 49, 60, 70, 91]
+        }
     ];
-
-  const options = {
-    chart: {
-      type: 'line',
-      toolbar: { show: false }, 
-      zoom: { enabled: false }
-    },
-    stroke: {
-      curve: 'smooth',          
-      width: 3,                 
-      colors: ['#00875A']      
-    },
-    colors: ['#00875A'],        
-    markers: {
-      size: 5,                  
-      colors: ['#00875A'],      
-      strokeColors: '#fff',
-      strokeWidth: 2,
-      hover: { size: 7 }
-    },
-    grid: {
-      show: true,
-      borderColor: '#f1f1f1',
-      xaxis: { lines: { show: false } },
-      yaxis: { lines: { show: true } }
-    },
-    xaxis: {
-      categories: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
-      labels: {
-        style: { colors: '#777', fontSize: '12px' }
-      },
-      axisBorder: { show: false },       
-      axisTicks: { show: false }      
-    },
-    yaxis: {
-      min: 0,
-      max: 140,           
-      tickAmount: 4,                    
-      labels: {
-        style: { colors: '#777', fontSize: '12px' }
-      }
-    },
-    tooltip: { enabled: true },
-    legend: { show: false }
-  };
-
-  const series = [
-    {
-      name: 'Qtde de Itens',
-      data: [30, 40, 45, 50, 49, 60, 70, 91]
-    }
-  ];
-    
   
+    async function handleReplacement({ id_produto, id_estoque, quantidade_reposicao }){
+        try{
+            setLoadingReplacement(true)
+
+            const response = await fetch("http://localhost:3001/api/dashboard/replacement", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    id_produto,
+                    id_estoque,
+                    quantidade_reposicao
+                }),
+            })
+
+            const data = await response.json()
+
+            if(!response.ok) {
+                alert(`${data.message}`)
+                return;
+            }
+
+            alert("Reposição realizada com sucesso")
+
+            setOpenReplacementModal(false)
+        } catch(error){
+            alert(`Erro ao conectar com o servidor ${error.message}`)
+        } finally{
+            setLoadingReplacement(false)
+        }
+        await fetchDashboardData();
+    }
+
+    function handleOpenLowStockModal() {
+        setOpenLowStockModal(true);
+    }
+
+    function handleOpenReplacementModal(item){
+        setSelectedProduct(item)
+        setOpenReplacementModal(true)
+    }
+
+    async function fetchDashboardData() {
+        try {
+            setLoadingDashboard(true)
+            
+            const response = await fetch("http://localhost:3001/api/dashboard/getDashboardData")
+        
+            const data = await response.json()
+
+            if(!response.ok){
+                alert(`${data.message}`)
+            }
+            setDashboardData({
+                totalProductsStock: data.totalProductsStock ?? 0,
+                totalSales: data.totalSales ?? 0,
+                totalSuppliers: data.totalSuppliers ?? 0,
+                lowStock: Array.isArray(data.lowStock) ? data.lowStock : []
+            });
+        } catch(error){
+            alert(`Erro ao carregar dashboard ${error.message}`)
+        } finally{
+            setLoadingDashboard(false)
+        }
+    }
+
+    useEffect(()=>{
+        fetchDashboardData()
+    }, [])
+
+    const lowStockProducts = (dashboardData?.lowStock ?? []).map((item) => ({
+        id_produto: item.id_produto,
+        id_estoque: item.id_estoque,
+        nome: item.nome_produto,
+        atual: item.quantidade_estoque_atual,
+        total: item.quantidade_estoque_total,
+        status: item.status
+    }))
+
     return(
         <>
         <div className="dashboard-container">
@@ -86,14 +169,14 @@ export default function Dashboard(){
                     <div className="dashboard-cards">
                         <div className="total-products">
                             <img src={ProductLogo} alt='Logo de Produtos Dashboard' className='product-icon'></img>
-                            <h1>1352</h1>
+                            <h1>{dashboardData.totalProductsStock}</h1>
                             <h2>Total de Itens</h2>
                             <hr></hr>
                             <span>+23 itens adicionados nos últimos dias</span>
                         </div>
                         <div className="total-sales">
                             <img src={SalesLogo} alt='Logo de Vendas Dashboard' className='sales-icon'></img>
-                            <h1>1352</h1>
+                            <h1>{dashboardData.totalSales}</h1>
                             <h2>Total de Vendas</h2>
                             <hr></hr>
                             <span>+27 vendas realizadas nos últimos dias</span>
@@ -135,6 +218,7 @@ export default function Dashboard(){
                                     <span>Produto</span>
                                     <span>Estoque</span>
                                     <span>Status</span>
+                                    <span>Ação</span>
                                 </div>
 
                                 {lowStockProducts.slice(0,2).map((item)=>{
@@ -142,25 +226,27 @@ export default function Dashboard(){
                                     
                                     return(
                                         <>
-                                        <div className='list-products' key={item.codigo}>
-                                            <div className='product-info'>
-                                                <h2>{item.nome}</h2>
-                                                <h3>{item.codigo}</h3>
-                                            </div>
-
-                                    
-                                            <div className='product-stock'> 
-                                                <div className='stock-bar'>
-                                                    <div className='stock-fill' style={{ width: `${percent}%`, backgroundColor: item.status === "Crítico" ? "#D4183D" : "#F59E0B" }}> </div>
+                                            <div className='list-row' key={`${item.id_produto}-${item.id_estoque}`}>
+                                                <div className='product-info'>
+                                                    <h2>{item.nome}</h2>
+                                                    <h3>{item.codigo}</h3>
                                                 </div>
-                                                <span>{item.atual}/{item.total}</span>
-                                            </div>
 
-                                            <h2 className='product-status' style={{color: item.status === "Crítico" ? "#B91C3D" : "#92400E", backgroundColor: item.status === "Crítico" ? "#FDE8EC" : "#FEF3C7"}}> 
-                                                {item.status}
-                                            </h2>
+                                        
+                                                <div className='product-stock'> 
+                                                    <div className='stock-bar'>
+                                                        <div className='stock-fill' style={{ width: `${percent}%`, backgroundColor: item.status === "Crítico" ? "#D4183D" : "#F59E0B" }}> </div>
+                                                    </div>
+                                                    <span>{item.atual}/{item.total}</span>
+                                                </div>
 
-                                        </div>  
+                                                <h2 className='product-status' style={{color: item.status === "Crítico" ? "#B91C3D" : "#92400E", backgroundColor: item.status === "Crítico" ? "#FDE8EC" : "#FEF3C7"}}> 
+                                                    {item.status}
+                                                </h2>
+                                                <button onClick={() => handleOpenReplacementModal(item)} className="replace-btn">
+                                                    Repor
+                                                </button>
+                                            </div>  
                                         </>
                                         
                                     );
@@ -168,22 +254,33 @@ export default function Dashboard(){
 
                             </div>
 
-                            <button className='see-more-btn' onClick={()=> setOpenModal(true)}>
+                            <button className='see-more-btn' onClick={handleOpenLowStockModal}>
                                 Ver Mais
                             </button>
 
-                            {openModal && (
+                            {openLowStockModal &&(
                                 <LowStockModal
-                                    openModal={openModal}
-                                    setOpenModal={setOpenModal}
+                                    openModal={openLowStockModal}
+                                    setOpenModal={setOpenLowStockModal}
                                     lowStockProducts={lowStockProducts}
+                                    handleOpenReplacementModal = {handleOpenReplacementModal}
+                                />
+                            )}
+
+                            {openReplacementModal && selectedProduct && (
+                                <ReplacementModal
+                                    openModal={openReplacementModal}
+                                    setOpenModal={setOpenReplacementModal}
+                                    product={selectedProduct}
+                                    onReplacement={handleReplacement}
+                                    loadingReplacement={loadingReplacement}
                                 />
                             )}
                         </div>
 
                         <div className='supplier-card'>
                             <img src={SupplierLogo} alt='Logo de Fornecedores Dashboard' className='supplier-icon'></img>
-                            <h1>50</h1>
+                            <h1>{dashboardData.totalSuppliers}</h1>
                             <h2>Total de Fornecedores</h2>
                             <hr></hr>
                             <span>+23 fornecedores cadastrados nos últimos dias</span>

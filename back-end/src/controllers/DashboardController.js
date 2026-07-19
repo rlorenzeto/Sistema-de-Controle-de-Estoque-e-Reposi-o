@@ -11,21 +11,21 @@ export const getDashboardData = async (req, res) => {
         )
 
         const totalSuppliers = await pool.query(
-            'SELECT COUNT(*) AS total FROM public.fornecedores'
+            'SELECT COUNT(*) AS total FROM public.fornecedor'
         )
 
-        const getLowStock = await pool.query(`
+        const lowStock = await pool.query(`
             SELECT
                 p.id_produto,
                 p.nome_produto,
                 e.quantidade_estoque_total,
-                e.quantidade_inicial_atual,
+                e.quantidade_estoque_atual,
                 CASE
                     WHEN e.quantidade_estoque_total <= e.quantidade_estoque_atual * 0.25 THEN 'Crítico'
                     WHEN e.quantidade_estoque_total <= e.quantidade_estoque_atual * 0.5 THEN 'Alerta'
                 END AS status
             FROM public.produto p
-            JOIN public.estoque e
+            JOIN public.possui_estoque e
                 ON e.id_produto = p.id_produto
             WHERE e.quantidade_estoque_atual <= e.quantidade_estoque_total * 0.5
             ORDER BY e.quantidade_estoque_atual ASC
@@ -33,7 +33,7 @@ export const getDashboardData = async (req, res) => {
         `)
 
         return res.status(200).json({
-            totalProductsStock: totalProductsStock.row[0].total,
+            totalProductsStock: totalProductsStock.rows[0].total,
             totalSales: totalSales.rows[0].total,
             totalSuppliers: totalSuppliers.rows[0].total,
             lowStock: lowStock.rows
@@ -58,6 +58,7 @@ export const replacement = async (req, res) => {
             UPDATE public.possui_estoque
             SET quantidade_estoque_atual = quantidade_estoque_atual + $1
             WHERE id_produto = $2 AND id_estoque = $3
+            RETURNING *;
             `,
             [quantidade_reposicao, id_produto, id_estoque]
         )
@@ -72,7 +73,7 @@ export const replacement = async (req, res) => {
     } catch (error){
         return res.status(500).json({
             message: "Erro ao realizar reposição",
-            error: message.error
+            error: error.message
         })
     }
 }

@@ -8,6 +8,8 @@ function SideBar (){
     const navigate = useNavigate();
 
     function handleLogout(){
+        localStorage.removeItem("token");
+        localStorage.removeItem("usuario");
         navigate('/')
     }
 
@@ -74,13 +76,13 @@ function SideBar (){
                         </button>
                     </div>
                 
-                    <div className="user-box">
+                    <button className="user-box" onClick={() => navigate('/profile')}>
                         <div className="user-avatar">MA</div>
                         <div className="user-info">
                             <strong>Marco Alves</strong>
                             <span>Lojas Cacique</span>
                         </div>
-                    </div>
+                    </button>
                 </div>
             </section>
         </>
