@@ -51,6 +51,61 @@ export const getUser = async (req, res) => {
   }
 };
 
+export const updateUser = async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ message: "Token não fornecido" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ message: "Token mal formatado" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const {
+      nome_usuario,
+      nome_empresa,
+      cpf_cnpj,
+      telefone,
+      rua,
+      numero,
+      cep,
+      cidade,
+      bairro,
+      pais,
+      estado,
+    } = req.body;
+
+    const result = await pool.query(
+      `UPDATE public.usuario
+       SET nome_usuario = $1, nome_empresa = $2, cpf_cnpj = $3, telefone = $4,
+           rua = $5, numero = $6, cep = $7, cidade = $8, bairro = $9, pais = $10, estado = $11
+       WHERE id_usuario = $12
+       RETURNING *`,
+      [nome_usuario, nome_empresa, cpf_cnpj, telefone, rua, numero, cep, cidade, bairro, pais, estado, decoded.id_usuario]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Usuário não encontrado" });
+    }
+
+    return res.status(200).json({
+      message: "Perfil atualizado com sucesso",
+      usuario: result.rows[0]
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Erro ao atualizar perfil",
+      error: error.message
+    });
+  }
+};
+
 export const changePassword = async (req, res) => {
   const authHeader = req.headers.authorization;
 

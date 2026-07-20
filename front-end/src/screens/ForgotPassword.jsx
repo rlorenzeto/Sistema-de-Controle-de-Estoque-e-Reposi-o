@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import Logo from '../assets/sidebarLogo.png'
-import { FaLock, FaCheckCircle, FaBoxOpen } from "react-icons/fa";
+import Logo from '../assets/sidebarLogo.png';
+import { FaLock, FaCheckCircle } from "react-icons/fa";
 import "./ForgotPassword.css";
 
 export default function ForgotPassword() {
   const [screen, setScreen] = useState("form");
   const [email, setEmail] = useState("");
   const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (screen === "loading") {
@@ -19,24 +20,45 @@ export default function ForgotPassword() {
     }
   }, [screen]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(email)) {
       setError(true);
+      setErrorMessage("Digite um endereço de e-mail válido.");
       return;
     }
 
     setError(false);
-    setScreen("loading");
+    setErrorMessage("");
+
+    try {
+      const response = await fetch("http://localhost:3001/api/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setScreen("loading");
+      } else {
+        setError(true);
+        setErrorMessage(data.message || "Erro ao solicitar recuperação.");
+      }
+    } catch (err) {
+      setError(true);
+      setErrorMessage("Erro ao conectar com o servidor.");
+    }
   };
 
   return (
     <div className="forgot-page">
       <header className="forgot-header">
         <div className="forgot-logo">
-          {/* <FaBoxOpen className="forgot-logo-icon" />
-          <span>StockControl</span> */}
           <img src={Logo} alt="Logo StockControl" className="sidebar-logo" />
         </div>
       </header>
@@ -68,7 +90,7 @@ export default function ForgotPassword() {
               />
               {error && (
                 <p className="forgot-error-message">
-                  Digite um endereço de e-mail válido.
+                  {errorMessage}
                 </p>
               )}
             </div>
@@ -132,6 +154,7 @@ export default function ForgotPassword() {
                 setScreen("form");
                 setEmail("");
                 setError(false);
+                setErrorMessage("");
               }}
             >
               Enviar outro link

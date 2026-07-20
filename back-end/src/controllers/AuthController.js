@@ -80,5 +80,123 @@ export const register = async (req, res) => {
         error: error.message
       })
     } 
-
 }
+
+export const getUser = async (req, res) => {
+  try {
+    const userId = req.user?.id_usuario || req.user?.id || req.query.id_usuario;
+
+    const result = await pool.query(
+      `SELECT id_usuario, nome_usuario, nome_empresa, email, cpf_cnpj, telefone, 
+              rua, numero, cep, cidade, bairro, pais, estado 
+       FROM public.usuario 
+       WHERE id_usuario = $1`,
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Usuário não encontrado.' });
+    }
+
+    return res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('Erro em getUser:', error);
+    return res.status(500).json({
+      message: 'Erro ao buscar dados do usuário',
+      error: error.message
+    });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  const {
+    id_usuario,
+    nome_usuario,
+    nome_empresa,
+    cpf_cnpj,
+    telefone,
+    rua,
+    numero,
+    cep,
+    cidade,
+    bairro,
+    pais,
+    estado,
+  } = req.body;
+
+  const userId = req.user?.id_usuario || req.user?.id || id_usuario;
+
+  try {
+    const result = await pool.query(
+      `UPDATE public.usuario 
+       SET nome_usuario = $1, 
+           nome_empresa = $2, 
+           cpf_cnpj = $3, 
+           telefone = $4,
+           rua = $5, 
+           numero = $6, 
+           cep = $7, 
+           cidade = $8, 
+           bairro = $9, 
+           pais = $10, 
+           estado = $11
+       WHERE id_usuario = $12
+       RETURNING id_usuario, nome_usuario, nome_empresa, email, cpf_cnpj, telefone, rua, numero, cep, cidade, bairro, pais, estado`,
+      [
+        nome_usuario,
+        nome_empresa,
+        cpf_cnpj,
+        telefone,
+        rua,
+        numero,
+        cep,
+        cidade,
+        bairro,
+        pais,
+        estado,
+        userId
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Usuário não encontrado.' });
+    }
+
+    return res.status(200).json({
+      message: 'Perfil atualizado com sucesso!',
+      usuario: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Erro em updateUser:', error);
+    return res.status(500).json({
+      message: 'Erro ao atualizar perfil',
+      error: error.message
+    });
+  }
+};
+
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "O e-mail é obrigatório." });
+  }
+
+  try {
+    const userCheck = await pool.query(
+      "SELECT id_usuario FROM public.usuario WHERE email = $1",
+      [email]
+    );
+
+    if (userCheck.rows.length === 0) {
+      return res.status(404).json({ message: "E-mail não cadastrado no sistema." });
+    }
+
+    return res.status(200).json({ message: "E-mail encontrado com sucesso!" });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Erro ao processar solicitação.",
+      error: error.message
+    });
+  }
+};
