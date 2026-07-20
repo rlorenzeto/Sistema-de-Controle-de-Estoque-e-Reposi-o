@@ -162,13 +162,23 @@ export default function Dashboard(){
         },
         yaxis: {
         min: 0,
-        max: 140,           
+        max: Number(dashboardData.totalSales),           
         tickAmount: 4,                    
         labels: {
+            formatter: function (value) {
+                return value.toFixed(0);
+            },
             style: { colors: '#777', fontSize: '12px' }
         }
         },
-        tooltip: { enabled: true },
+        tooltip: { 
+            enabled: true,
+            y: {
+            formatter: function (value) {
+                return value.toFixed(0);
+            }
+        }
+        },
         legend: { show: false }
     };
 
@@ -235,14 +245,14 @@ export default function Dashboard(){
                                 </div>
 
                                 {lowStockProducts.slice(0,2).map((item)=>{
-                                    const percent = (item.atual / item.total) * 100;
+                                    const percent = item.total > 0 ? (item.atual / item.total) * 100 : 0;
                                     
                                     return(
                                         <>
                                             <div className='list-row' key={`${item.id_produto}-${item.id_estoque}`}>
                                                 <div className='product-info'>
                                                     <h2>{item.nome}</h2>
-                                                    <h3>{item.codigo}</h3>
+                                                    <h3>Código: {item.id_produto}</h3>
                                                 </div>
 
                                         

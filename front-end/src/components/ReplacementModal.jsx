@@ -32,12 +32,9 @@ export default function ReplacementModal({
       <div className="replacement-modal">
         <div className="replacement-header">
           <h2>Solicitar Reposição</h2>
-          <img
-            src="https://img.icons8.com/?size=20&id=45&format=png&color=104F3A"
-            alt="Ícone Fechar Modal"
-            className="close-button"
-            onClick={()=> setOpenModal(false)}
-        />
+          <button className="close-button" onClick={()=> setOpenModal(false)}>
+            ✕
+          </button>
         </div>
 
         <form onSubmit={handleSubmit}>

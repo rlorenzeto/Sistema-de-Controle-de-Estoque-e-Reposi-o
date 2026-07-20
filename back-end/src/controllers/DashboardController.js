@@ -18,11 +18,14 @@ export const getDashboardData = async (req, res) => {
             SELECT
                 p.id_produto,
                 p.nome_produto,
+                e.id_estoque,
                 e.quantidade_estoque_total,
                 e.quantidade_estoque_atual,
                 CASE
-                    WHEN e.quantidade_estoque_total <= e.quantidade_estoque_atual * 0.25 THEN 'Crítico'
-                    WHEN e.quantidade_estoque_total <= e.quantidade_estoque_atual * 0.5 THEN 'Alerta'
+                    WHEN e.quantidade_estoque_atual <= e.quantidade_estoque_total * 0.25 THEN 'Crítico'
+                    WHEN e.quantidade_estoque_atual > e.quantidade_estoque_total * 0.25
+                        AND e.quantidade_estoque_atual <= e.quantidade_estoque_total * 0.5 THEN 'Alerta'
+                    ELSE 'Normal'
                 END AS status
             FROM public.produto p
             JOIN public.possui_estoque e
@@ -35,18 +38,20 @@ export const getDashboardData = async (req, res) => {
         const salesEvolution = await pool.query(`
             WITH dias AS (
                 SELECT generate_series(
-                current_date - interval '6 days',
-                current_date,
-                interval '1 day'
+                    current_date - interval '6 days',
+                    current_date,
+                    interval '1 day'
                 )::date AS dia
             )
             SELECT
                 dias.dia,
-                COALESCE(COUNT(v.id_venda), 0) AS total_vendas,
+                COALESCE(SUM(pv.quantidade_venda), 0) AS total_vendas,
                 COALESCE(SUM(v.valor_venda), 0) AS valor_total
             FROM dias
             LEFT JOIN public.venda v
                 ON v.data_venda::date = dias.dia
+            LEFT JOIN public.possui_venda pv
+                ON pv.id_venda = v.id_venda
             GROUP BY dias.dia
             ORDER BY dias.dia
         `)
@@ -88,9 +93,11 @@ export const getDashboardData = async (req, res) => {
 }
 
 export const replacement = async (req, res) => {
+    console.log(req.body);
+
     const { id_produto, id_estoque, quantidade_reposicao } = req.body;
 
-    if(!id_produto || !id_estoque || !quantidade_reposicao || quantidade_reposicao == null)
+    if(id_produto == null || id_estoque == null || quantidade_reposicao == null)
         return res.status(400).json({ message: 'Dados inexistentes' })
 
     try{
