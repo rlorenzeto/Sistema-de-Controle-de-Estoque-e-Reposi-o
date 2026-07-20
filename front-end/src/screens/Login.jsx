@@ -2,6 +2,7 @@ import './Login.css'
 import Logo from '../assets/logo.png'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react';
+import { RiEyeLine, RiEyeOffLine } from "react-icons/ri";
 
 export default function Login() {
 
@@ -15,6 +16,8 @@ export default function Login() {
     email: "",
     password: "",
   });
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -76,7 +79,25 @@ export default function Login() {
             <label htmlFor="email">Email</label>
             <input className="input" type="email" id="email" placeholder="seuemail@empresa.com" onChange={handleChange} required/>
             <label htmlFor="password">Senha</label>
-            <input className="input" type="password" id="password" placeholder="********" onChange={handleChange} required/>
+            <div className="password-field">
+              <input
+                className="input"
+                type={showPassword ? "text" : "password"}
+                id="password"
+                placeholder="********"
+                onChange={handleChange}
+                required
+              />
+
+              <button
+                type="button"
+                className="toggle-password"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              >
+                {showPassword ? <RiEyeOffLine /> : <RiEyeLine />}
+              </button>
+            </div>
             <div className="form-options">
               <label htmlFor="remember" className="remember-me">
                 <input type="checkbox" id="remember" />
