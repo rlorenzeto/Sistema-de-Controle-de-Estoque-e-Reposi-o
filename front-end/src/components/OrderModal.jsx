@@ -117,18 +117,17 @@ export default function OrderModal({ isOpen, onClose }) {
                 <div className="modal-header">
                     <div className="header-title">
                         <h2>Novo Pedido</h2>
-                        <span className="badge-rascunho">Rascunho</span>
                     </div>
                     <button className="close-btn" onClick={onClose}>✕</button>
                 </div>
 
                 <div className="modal-body">
                     <div className="customer-field">
-                        <label>Cliente <span className="optional">(Opcional)</span></label>
+                        <label>Cliente</label>
                         <input 
                             type="text" 
                             className="input-simples"
-                            placeholder="Digite o nome do cliente (opcional)" 
+                            placeholder="Digite o nome do cliente" 
                             value={nomeCliente}
                             onChange={(e) => setNomeCliente(e.target.value)}
                         />

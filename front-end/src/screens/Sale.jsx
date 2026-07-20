@@ -12,7 +12,7 @@ export default function Sale() {
   const [vendas, setVendas] = useState([]);
   const [stats, setStats] = useState({
     totalVendas: 0,
-    pedidosPendentes: 0,
+    pedidosHoje: 0,
     ticketMedio: 0
   });
 
@@ -34,7 +34,7 @@ export default function Sale() {
     if (!vendasData || vendasData.length === 0) {
       setStats({
         totalVendas: 0,
-        pedidosPendentes: 0,
+        pedidosHoje: 0,
         ticketMedio: 0
       });
       return;
@@ -45,9 +45,19 @@ export default function Sale() {
     // Calcular ticket médio
     const media = total / vendasData.length;
 
+    // Contar pedidos de hoje
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
+    const pedidosHoje = vendasData.filter(venda => {
+      const dataVenda = new Date(venda.data_venda);
+      dataVenda.setHours(0, 0, 0, 0);
+      return dataVenda.getTime() === hoje.getTime();
+    }).length;
+
     setStats({
       totalVendas: total,
-      pedidosPendentes: 0,
+      pedidosHoje: pedidosHoje,
       ticketMedio: media
     });
   };
@@ -87,7 +97,7 @@ export default function Sale() {
           <main className="sale-main">
             <div className="sale-cards">
               <CardResumo title="Total de Vendas" value={formatarMoeda(stats.totalVendas)}/>
-              <CardResumo title="Pedidos Pendentes" value={stats.pedidosPendentes}/>
+              <CardResumo title="Pedidos Hoje" value={stats.pedidosHoje}/>
               <CardResumo title="Ticket Médio" value={formatarMoeda(stats.ticketMedio)}/>
             </div>
             <TabelaVendas onVendaDeleted={handleVendaDeleted} />
