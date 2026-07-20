@@ -18,6 +18,9 @@ export default function ListaVendas({ onVendaDeleted }) {
   // Estado para controlar o termo de busca
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Estado para controlar o filtro de data
+  const [filtroData, setFiltroData] = useState("Últimos 30 dias");
+
   // Estado para controlar o modal de edição
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [vendaSelecionada, setVendaSelecionada] = useState(null);
@@ -73,13 +76,47 @@ export default function ListaVendas({ onVendaDeleted }) {
     });
   };
 
-  // Filtrar vendas com base no termo de busca
+  // Função para filtrar vendas por data
+  const filtrarPorData = (venda) => {
+    const dataVenda = new Date(venda.data_venda);
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    switch(filtroData) {
+      case "Hoje":
+        const dataVendaDia = new Date(venda.data_venda);
+        dataVendaDia.setHours(0, 0, 0, 0);
+        return dataVendaDia.getTime() === hoje.getTime();
+      
+      case "Últimos 7 dias":
+        const seteDiasAtras = new Date(hoje);
+        seteDiasAtras.setDate(hoje.getDate() - 7);
+        return dataVenda >= seteDiasAtras;
+      
+      case "Últimos 30 dias":
+        const trintaDiasAtras = new Date(hoje);
+        trintaDiasAtras.setDate(hoje.getDate() - 30);
+        return dataVenda >= trintaDiasAtras;
+      
+      case "Este mês":
+        return dataVenda.getMonth() === hoje.getMonth() && 
+               dataVenda.getFullYear() === hoje.getFullYear();
+      
+      default:
+        return true;
+    }
+  };
+
+  // Filtrar vendas com base no termo de busca e data
   const vendasFiltradas = vendas.filter((venda) => {
     const termoBusca = searchTerm.toLowerCase();
     const id = venda.id_venda?.toString().toLowerCase() || '';
     const cliente = venda.descricao?.toLowerCase() || '';
     
-    return id.includes(termoBusca) || cliente.includes(termoBusca);
+    const matchBusca = id.includes(termoBusca) || cliente.includes(termoBusca);
+    const matchData = filtrarPorData(venda);
+    
+    return matchBusca && matchData;
   });
 
   const handleEditarVenda = async (venda) => {
@@ -177,19 +214,11 @@ export default function ListaVendas({ onVendaDeleted }) {
           <svg className="filtro-icon" xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#9ca3af">
             <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Z"/>
           </svg>
-          <select>
+          <select value={filtroData} onChange={(e) => setFiltroData(e.target.value)}>
             <option>Últimos 30 dias</option>
             <option>Últimos 7 dias</option>
             <option>Hoje</option>
             <option>Este mês</option>
-          </select>
-        </div>
-        
-        <div className="filtro-select">
-          <select>
-            <option>Todos</option>
-            <option>Concluído</option>
-            <option>Pendente</option>
           </select>
         </div>
       </div>
