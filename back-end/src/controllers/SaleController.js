@@ -72,7 +72,7 @@ export const getSales = async (req, res) => {
     venda.descricao,
     venda.data_venda,
     venda.valor_venda,
-    COUNT(possui_venda.id_produto) as total_itens
+    COALESCE(SUM(possui_venda.quantidade_venda), 0) as total_itens
   FROM venda 
   LEFT JOIN possui_venda ON venda.id_venda = possui_venda.id_venda
   GROUP BY venda.id_venda
