@@ -30,6 +30,8 @@ export default function Dashboard(){
         recentSuppliers: 0
     });
     const [loadingDashboard, setLoadingDashboard] = useState(true);
+
+     const token = localStorage.getItem("token");
   
     async function handleReplacement({ id_produto, id_estoque, quantidade_reposicao }){
         try{
@@ -39,6 +41,7 @@ export default function Dashboard(){
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
                 },
                 body: JSON.stringify({
                     id_produto,
@@ -78,7 +81,13 @@ export default function Dashboard(){
         try {
             setLoadingDashboard(true)
             
-            const response = await fetch("http://localhost:3001/api/dashboard/getDashboardData")
+            const response = await fetch("http://localhost:3001/api/dashboard/getDashboardData", {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                }
+            });
         
             const data = await response.json()
 

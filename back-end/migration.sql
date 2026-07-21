@@ -84,8 +84,18 @@ CREATE TABLE fornecedor (
 	CONSTRAINT fornecedor_pk PRIMARY KEY (id_fornecedor)
 );
 
-ALTER TABLE public.fornecedor
+ALTER TABLE fornecedor
 ADD COLUMN data_cadastro date;
+
+
+ALTER TABLE fornecedor
+ADD COLUMN IF NOT EXISTS id_usuario int4;
+
+ALTER TABLE fornecedor
+ADD CONSTRAINT fornecedor_usuario_fk
+FOREIGN KEY (id_usuario)
+REFERENCES public.usuario(id_usuario)
+ON DELETE CASCADE;
 
 -- pedido definição
 
@@ -126,6 +136,15 @@ CREATE TABLE produto (
 	preco_venda numeric NULL,
 	CONSTRAINT produto_pk PRIMARY KEY (id_produto)
 );
+
+ALTER TABLE produto
+ADD COLUMN IF NOT EXISTS id_usuario int4;
+
+ALTER TABLE public.produto
+ADD CONSTRAINT produto_usuario_fk
+FOREIGN KEY (id_usuario)
+REFERENCES public.usuario(id_usuario)
+ON DELETE CASCADE;
 
 -- reposicao definição
 

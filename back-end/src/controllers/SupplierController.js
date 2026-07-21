@@ -1,4 +1,16 @@
 import pool from '../config/database.js';
+import jwt from 'jsonwebtoken';
+
+const getUserFromToken = (req) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    throw new Error('Token não fornecido ou mal formatado');
+  }
+
+  const token = authHeader.split(' ')[1];
+  return jwt.verify(token, process.env.JWT_SECRET);
+};
 
 export const createSupplier = async (req, res) => {
   const {
@@ -20,9 +32,14 @@ export const createSupplier = async (req, res) => {
   }
 
   try {
+    const decoded = getUserFromToken(req);
+    const id_usuario = decoded.id_usuario;
+
     const supplierExists = await pool.query(
-      'SELECT id_fornecedor FROM public.fornecedor WHERE nome_fornecedor = $1',
-      [nome_fornecedor]
+      `SELECT id_fornecedor
+       FROM public.fornecedor
+       WHERE nome_fornecedor = $1 AND id_usuario = $2`,
+      [nome_fornecedor, id_usuario]
     );
 
     if (supplierExists.rows.length > 0) {
@@ -30,10 +47,10 @@ export const createSupplier = async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO public.fornecedor 
-      (nome_fornecedor, rua, bairro, cidade, estado, pais, cep, email, telefone, documento, tipo_pessoa)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-      RETURNING *`,
+      `INSERT INTO public.fornecedor
+       (nome_fornecedor, rua, bairro, cidade, estado, pais, cep, email, telefone, documento, tipo_pessoa, id_usuario)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       RETURNING *`,
       [
         nome_fornecedor,
         rua,
@@ -45,7 +62,8 @@ export const createSupplier = async (req, res) => {
         email,
         telefone,
         documento,
-        tipo_pessoa
+        tipo_pessoa,
+        id_usuario
       ]
     );
 
@@ -54,6 +72,13 @@ export const createSupplier = async (req, res) => {
       fornecedor: result.rows[0]
     });
   } catch (error) {
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        message: 'Token inválido ou expirado',
+        error: error.message
+      });
+    }
+
     return res.status(500).json({
       message: 'Erro ao cadastrar fornecedor',
       error: error.message
@@ -63,8 +88,15 @@ export const createSupplier = async (req, res) => {
 
 export const getSuppliers = async (req, res) => {
   try {
+    const decoded = getUserFromToken(req);
+    const id_usuario = decoded.id_usuario;
+
     const result = await pool.query(
-      'SELECT * FROM public.fornecedor ORDER BY nome_fornecedor ASC'
+      `SELECT *
+       FROM public.fornecedor
+       WHERE id_usuario = $1
+       ORDER BY nome_fornecedor ASC`,
+      [id_usuario]
     );
 
     return res.status(200).json({
@@ -83,9 +115,14 @@ export const getSupplierById = async (req, res) => {
   const { id } = req.params;
 
   try {
+    const decoded = getUserFromToken(req);
+    const id_usuario = decoded.id_usuario;
+
     const result = await pool.query(
-      'SELECT * FROM public.fornecedor WHERE id_fornecedor = $1',
-      [id]
+      `SELECT *
+       FROM public.fornecedor
+       WHERE id_fornecedor = $1 AND id_usuario = $2`,
+      [id, id_usuario]
     );
 
     if (result.rows.length === 0) {
@@ -112,12 +149,16 @@ export const searchSuppliers = async (req, res) => {
   }
 
   try {
+    const decoded = getUserFromToken(req);
+    const id_usuario = decoded.id_usuario;
+
     const result = await pool.query(
       `SELECT id_fornecedor, nome_fornecedor, email, telefone
        FROM public.fornecedor
-       WHERE nome_fornecedor ILIKE $1
+       WHERE id_usuario = $1
+         AND nome_fornecedor ILIKE $2
        ORDER BY nome_fornecedor ASC`,
-      [`%${search}%`]
+      [id_usuario, `%${search}%`]
     );
 
     return res.status(200).json(result.rows);
@@ -146,9 +187,14 @@ export const updateSupplier = async (req, res) => {
   } = req.body;
 
   try {
+    const decoded = getUserFromToken(req);
+    const id_usuario = decoded.id_usuario;
+
     const checkSupplier = await pool.query(
-      'SELECT * FROM public.fornecedor WHERE id_fornecedor = $1',
-      [id]
+      `SELECT *
+       FROM public.fornecedor
+       WHERE id_fornecedor = $1 AND id_usuario = $2`,
+      [id, id_usuario]
     );
 
     if (checkSupplier.rows.length === 0) {
@@ -170,7 +216,7 @@ export const updateSupplier = async (req, res) => {
            telefone = $9,
            documento = $10,
            tipo_pessoa = $11
-       WHERE id_fornecedor = $12
+       WHERE id_fornecedor = $12 AND id_usuario = $13
        RETURNING *`,
       [
         nome_fornecedor ?? fornecedorAtual.nome_fornecedor,
@@ -184,7 +230,8 @@ export const updateSupplier = async (req, res) => {
         telefone ?? fornecedorAtual.telefone,
         documento ?? fornecedorAtual.documento,
         tipo_pessoa ?? fornecedorAtual.tipo_pessoa,
-        id
+        id,
+        id_usuario
       ]
     );
 
@@ -204,9 +251,14 @@ export const deleteSupplier = async (req, res) => {
   const { id } = req.params;
 
   try {
+    const decoded = getUserFromToken(req);
+    const id_usuario = decoded.id_usuario;
+
     const result = await pool.query(
-      'DELETE FROM public.fornecedor WHERE id_fornecedor = $1 RETURNING *',
-      [id]
+      `DELETE FROM public.fornecedor
+       WHERE id_fornecedor = $1 AND id_usuario = $2
+       RETURNING *`,
+      [id, id_usuario]
     );
 
     if (result.rows.length === 0) {
