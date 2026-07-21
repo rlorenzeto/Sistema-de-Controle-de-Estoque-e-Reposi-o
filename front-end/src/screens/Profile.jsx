@@ -283,7 +283,6 @@ export default function Profile() {
               </div>
 
               <div className="buttons">
-                <a href="/change-password">Alterar minha senha</a>
 
                 <button type="submit" className="save">
                   Salvar Alterações
