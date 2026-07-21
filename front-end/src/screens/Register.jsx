@@ -20,6 +20,7 @@ export default function Cadastro() {
     cidade: "",
     pais: "",
     telefone: "",
+    numero: "",
     cep: "",
     bairro: "",
     senha: "",
@@ -203,7 +204,7 @@ export default function Cadastro() {
                   type="text"
                   id="bairro"
                   placeholder="Nome do bairro"
-                  onChange={handleChange}
+                  onChange={handleChange} 
                 />
               </div>
 
@@ -215,7 +216,7 @@ export default function Cadastro() {
                   id="cep"
                   placeholder="00000-000"
                   onChange={handleChange}
-                  maxLength={8}
+                  maxLength={9}
                 />
               </div>
             </div>

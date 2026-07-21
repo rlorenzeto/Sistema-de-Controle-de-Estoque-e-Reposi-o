@@ -41,6 +41,9 @@ ALTER TABLE usuario
 ADD COLUMN reset_password_token VARCHAR(255),
 ADD COLUMN reset_password_expires TIMESTAMP;
 
+ALTER TABLE usuario
+ADD COLUMN IF NOT EXISTS numero VARCHAR(20);
+
 -- estoque definição
 
 -- Drop table
