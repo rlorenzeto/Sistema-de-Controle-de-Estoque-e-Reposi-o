@@ -34,6 +34,10 @@ export default function ListaVendas({ onVendaDeleted }) {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [vendaParaVisualizar, setVendaParaVisualizar] = useState(null);
 
+  // Estados para paginação
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const [itensPorPagina] = useState(5);
+
   // useEffect executa quando o componente é montado (carregado na tela)
   useEffect(() => {
     loadVendas();
@@ -118,6 +122,29 @@ export default function ListaVendas({ onVendaDeleted }) {
     
     return matchBusca && matchData;
   });
+
+  // Calcular paginação
+  const totalPaginas = Math.ceil(vendasFiltradas.length / itensPorPagina);
+  const indexUltimoItem = paginaAtual * itensPorPagina;
+  const indexPrimeiroItem = indexUltimoItem - itensPorPagina;
+  const vendasPaginadas = vendasFiltradas.slice(indexPrimeiroItem, indexUltimoItem);
+
+  // Resetar para primeira página quando filtros mudarem
+  useEffect(() => {
+    setPaginaAtual(1);
+  }, [searchTerm, filtroData]);
+
+  const handlePaginaAnterior = () => {
+    setPaginaAtual(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleProximaPagina = () => {
+    setPaginaAtual(prev => Math.min(prev + 1, totalPaginas));
+  };
+
+  const handleIrParaPagina = (numeroPagina) => {
+    setPaginaAtual(numeroPagina);
+  };
 
   const handleEditarVenda = async (venda) => {
     try {
@@ -244,7 +271,7 @@ export default function ListaVendas({ onVendaDeleted }) {
                 </td>
               </tr>
             ) : (
-              vendasFiltradas.map((venda) => (
+              vendasPaginadas.map((venda) => (
                 <tr key={venda.id_venda}> 
                   <td>#{venda.id_venda}</td> 
                   <td>{formatarData(venda.data_venda)}</td>
@@ -271,6 +298,63 @@ export default function ListaVendas({ onVendaDeleted }) {
           </tbody>
         </table>
       </div>
+
+      {/* Controles de Paginação */}
+      {vendasFiltradas.length > 0 && totalPaginas > 1 && (
+        <div className="paginacao-container">
+          <button 
+            className="btn-paginacao" 
+            onClick={handlePaginaAnterior}
+            disabled={paginaAtual === 1}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
+              <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z"/>
+            </svg>
+          </button>
+
+          <div className="paginas-numeros">
+            {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((numero) => {
+              // Mostrar apenas algumas páginas para não poluir a UI
+              if (
+                numero === 1 ||
+                numero === totalPaginas ||
+                (numero >= paginaAtual - 1 && numero <= paginaAtual + 1)
+              ) {
+                return (
+                  <button
+                    key={numero}
+                    className={`btn-numero-pagina ${paginaAtual === numero ? 'ativo' : ''}`}
+                    onClick={() => handleIrParaPagina(numero)}
+                  >
+                    {numero}
+                  </button>
+                );
+              } else if (
+                numero === paginaAtual - 2 ||
+                numero === paginaAtual + 2
+              ) {
+                return <span key={numero} className="paginacao-reticencias">...</span>;
+              }
+              return null;
+            })}
+          </div>
+
+          <button 
+            className="btn-paginacao" 
+            onClick={handleProximaPagina}
+            disabled={paginaAtual === totalPaginas}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
+              <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/>
+            </svg>
+          </button>
+
+          <span className="paginacao-info">
+            Página {paginaAtual} de {totalPaginas}
+          </span>
+        </div>
+      )}
+
       <EditOrderModal 
         isOpen={isEditModalOpen} 
         onClose={handleCloseEditModal} 
