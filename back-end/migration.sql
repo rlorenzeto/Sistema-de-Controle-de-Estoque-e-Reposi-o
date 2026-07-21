@@ -146,6 +146,16 @@ FOREIGN KEY (id_usuario)
 REFERENCES public.usuario(id_usuario)
 ON DELETE CASCADE;
 
+ALTER TABLE produto
+ADD COLUMN id_fornecedor INTEGER;
+
+ALTER TABLE public.produto
+ADD CONSTRAINT fk_produto_fornecedor
+FOREIGN KEY (id_fornecedor)
+REFERENCES public.fornecedor(id_fornecedor)
+ON UPDATE CASCADE
+ON DELETE SET NULL;
+
 -- reposicao definição
 
 -- Drop table

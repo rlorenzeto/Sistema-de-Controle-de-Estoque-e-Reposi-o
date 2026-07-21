@@ -1,362 +1,459 @@
 import pool from '../config/database.js';
+import jwt from 'jsonwebtoken';
 
-export const createStock = async (req, res) => {
-  const { descricao, id_usuario } = req.body  
+const getUserFromToken = (req) => {
+  const authHeader = req.headers.authorization;
 
-  if (!descricao || descricao.trim() === '') {
-    return res.status(400).json({ message: 'Descrição é obrigatória' })
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    throw new Error('Token não fornecido ou mal formatado');
   }
 
-  if (!id_usuario) {
-    return res.status(400).json({ message: 'ID do usuário é obrigatório' })
+  const token = authHeader.split(' ')[1];
+  return jwt.verify(token, process.env.JWT_SECRET);
+};
+
+export const createStock = async (req, res) => {
+  const { descricao } = req.body;
+
+  if (!descricao || descricao.trim() === '') {
+    return res.status(400).json({ message: 'Descrição é obrigatória' });
   }
 
   try {
+    const decoded = getUserFromToken(req);
+    const id_usuario = decoded.id_usuario;
+
     const result = await pool.query(
-      // id_estoque (é auto-gerado)
-      'INSERT INTO public.estoque (descricao, id_usuario) VALUES ($1, $2) RETURNING *',
-      [descricao, id_usuario]  
-    )
+      `INSERT INTO public.estoque (descricao, id_usuario)
+       VALUES ($1, $2)
+       RETURNING *`,
+      [descricao, id_usuario]
+    );
 
     return res.status(201).json({
       message: 'Estoque criado com sucesso',
-      estoque: result.rows[0]  
-    })
+      estoque: result.rows[0]
+    });
   } catch (error) {
     return res.status(500).json({
       message: 'Erro ao criar estoque',
       error: error.message
-    })
+    });
   }
-}
+};
 
 export const getStock = async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM public.estoque')
+    const decoded = getUserFromToken(req);
+    const id_usuario = decoded.id_usuario;
+
+    const result = await pool.query(
+      `SELECT *
+       FROM public.estoque
+       WHERE id_usuario = $1
+       ORDER BY id_estoque ASC`,
+      [id_usuario]
+    );
+
     return res.status(200).json({
       message: 'Estoques listados com sucesso',
       estoques: result.rows
-    })
+    });
   } catch (error) {
     return res.status(500).json({
       message: 'Erro ao listar estoques',
       error: error.message
-    })
+    });
   }
-}
+};
 
 export const getStockByNome = async (req, res) => {
   try {
-    const { nome } = req.params  // Pega o nome da URL
-    
+    const { nome } = req.params;
+    const decoded = getUserFromToken(req);
+    const id_usuario = decoded.id_usuario;
+
     const result = await pool.query(
-      'SELECT * FROM public.estoque WHERE descricao ILIKE $1',
-      [`%${nome}%`]  
-    )
-    
+      `SELECT *
+       FROM public.estoque
+       WHERE id_usuario = $1
+         AND descricao ILIKE $2`,
+      [id_usuario, `%${nome}%`]
+    );
+
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Nenhum estoque encontrado com esse nome' })
+      return res.status(404).json({ message: 'Nenhum estoque encontrado com esse nome' });
     }
 
     return res.status(200).json({
       message: 'Estoque(s) encontrado(s) com sucesso',
-      estoques: result.rows  
-    })
+      estoques: result.rows
+    });
   } catch (error) {
     return res.status(500).json({
       message: 'Erro ao buscar estoque',
       error: error.message
-    })
+    });
   }
-}
+};
 
 export const getStockByStatus = async (req, res) => {
   try {
-    const { status } = req.params  // 'critico', 'alerta' ou 'regular'
-    
-    let condicao = ''
-    
+    const { status } = req.params;
+    const decoded = getUserFromToken(req);
+    const id_usuario = decoded.id_usuario;
+
+    let condicao = '';
+
     if (status === 'critico') {
-      condicao = 'total_produtos < 5'
+      condicao = 'COUNT(pe.id_produto) < 5';
     } else if (status === 'alerta') {
-      condicao = 'total_produtos >= 5 AND total_produtos < 10'
+      condicao = 'COUNT(pe.id_produto) >= 5 AND COUNT(pe.id_produto) < 10';
     } else if (status === 'regular') {
-      condicao = 'total_produtos >= 10'
+      condicao = 'COUNT(pe.id_produto) >= 10';
     } else {
-      return res.status(400).json({ 
-        message: 'Status inválido. Use: critico, alerta ou regular' 
-      })
+      return res.status(400).json({
+        message: 'Status inválido. Use: critico, alerta ou regular'
+      });
     }
 
     const result = await pool.query(
-      `SELECT 
-        e.id_estoque,
-        e.descricao,
-        e.id_usuario,
-        COUNT(pe.id_produto) as total_produtos, //Conta quantos produtos tem
-        CASE 
-          WHEN COUNT(pe.id_produto) < 5 THEN 'critico'
-          WHEN COUNT(pe.id_produto) >= 5 AND COUNT(pe.id_produto) < 10 THEN 'alerta'
-          ELSE 'regular'
-        END as status
-      FROM public.estoque e 
-      LEFT JOIN public.possui_estoque pe ON e.id_estoque = pe.id_estoque
-      GROUP BY e.id_estoque, e.descricao, e.id_usuario
-      HAVING ${condicao}
-      ORDER BY total_produtos ASC`
-    )
-    
+      `SELECT
+         e.id_estoque,
+         e.descricao,
+         e.id_usuario,
+         COUNT(pe.id_produto) AS total_produtos,
+         CASE
+           WHEN COUNT(pe.id_produto) < 5 THEN 'critico'
+           WHEN COUNT(pe.id_produto) >= 5 AND COUNT(pe.id_produto) < 10 THEN 'alerta'
+           ELSE 'regular'
+         END AS status
+       FROM public.estoque e
+       LEFT JOIN public.possui_estoque pe ON e.id_estoque = pe.id_estoque
+       WHERE e.id_usuario = $1
+       GROUP BY e.id_estoque, e.descricao, e.id_usuario
+       HAVING ${condicao}
+       ORDER BY total_produtos ASC`,
+      [id_usuario]
+    );
+
     if (result.rows.length === 0) {
-      return res.status(404).json({ 
-        message: `Nenhum estoque com status ${status} encontrado` 
-      })
+      return res.status(404).json({
+        message: `Nenhum estoque com status ${status} encontrado`
+      });
     }
 
     return res.status(200).json({
       message: `Estoques com status ${status}`,
       total: result.rows.length,
       estoques: result.rows
-    })
+    });
   } catch (error) {
     return res.status(500).json({
       message: 'Erro ao buscar estoques por status',
       error: error.message
-    })
+    });
   }
-}
+};
 
 export const getStockById = async (req, res) => {
   try {
-    const { id } = req.params  
-    
+    const { id } = req.params;
+    const decoded = getUserFromToken(req);
+    const id_usuario = decoded.id_usuario;
+
     const result = await pool.query(
-      'SELECT * FROM public.estoque WHERE id_estoque = $1',
-      [id]  
-    )
-    
+      `SELECT *
+       FROM public.estoque
+       WHERE id_estoque = $1 AND id_usuario = $2`,
+      [id, id_usuario]
+    );
+
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Estoque não encontrado' })
+      return res.status(404).json({ message: 'Estoque não encontrado' });
     }
 
     return res.status(200).json({
       message: 'Estoque encontrado com sucesso',
-      estoque: result.rows[0]  
-    })
+      estoque: result.rows[0]
+    });
   } catch (error) {
     return res.status(500).json({
       message: 'Erro ao buscar estoque',
       error: error.message
-    })
+    });
   }
-}
+};
 
 export const updateStock = async (req, res) => {
   try {
-    const { id } = req.params
-    const { descricao, id_usuario } = req.body
+    const { id } = req.params;
+    const { descricao } = req.body;
+    const decoded = getUserFromToken(req);
+    const id_usuario = decoded.id_usuario;
 
-    if (!descricao && !id_usuario) {
-      return res.status(400).json({ message: 'Informe ao menos um campo para atualizar' })
+    if (!descricao) {
+      return res.status(400).json({ message: 'Informe ao menos um campo para atualizar' });
     }
 
-    // Busca o estoque atual
     const checkStock = await pool.query(
-      'SELECT * FROM public.estoque WHERE id_estoque = $1',
-      [id]
-    )
+      `SELECT *
+       FROM public.estoque
+       WHERE id_estoque = $1 AND id_usuario = $2`,
+      [id, id_usuario]
+    );
 
     if (checkStock.rows.length === 0) {
-      return res.status(404).json({ message: 'Estoque não encontrado' })
+      return res.status(404).json({ message: 'Estoque não encontrado' });
     }
 
-    const estoqueAtual = checkStock.rows[0]
-
-    // Usa os valores enviados OU mantém os valores atuais
-    const novaDescricao = descricao !== undefined ? descricao : estoqueAtual.descricao
-    const novoIdUsuario = id_usuario !== undefined ? id_usuario : estoqueAtual.id_usuario
+    const estoqueAtual = checkStock.rows[0];
+    const novaDescricao = descricao !== undefined ? descricao : estoqueAtual.descricao;
 
     const result = await pool.query(
-      'UPDATE public.estoque SET descricao = $1, id_usuario = $2 WHERE id_estoque = $3 RETURNING *',
-      [novaDescricao, novoIdUsuario, id]
-    )
+      `UPDATE public.estoque
+       SET descricao = $1
+       WHERE id_estoque = $2 AND id_usuario = $3
+       RETURNING *`,
+      [novaDescricao, id, id_usuario]
+    );
 
     return res.status(200).json({
       message: 'Estoque atualizado com sucesso',
       estoque: result.rows[0]
-    })
+    });
   } catch (error) {
     return res.status(500).json({
       message: 'Erro ao atualizar estoque',
       error: error.message
-    })
+    });
   }
-}
+};
 
 export const getStockProducts = async (req, res) => {
   try {
-    const { id } = req.params
+    const { id } = req.params;
+    const decoded = getUserFromToken(req);
+    const id_usuario = decoded.id_usuario;
 
     const result = await pool.query(
-      `SELECT 
-        p.id_produto,
-        p.nome_produto,
-        p.categoria,
-        p.preco_compra,
-        p.preco_venda,
-        pe.quantidade_estoque_total,
-        pe.quantidade_estoque_atual
-      FROM public.possui_estoque pe
-      INNER JOIN public.produto p ON pe.id_produto = p.id_produto
-      WHERE pe.id_estoque = $1
-      ORDER BY p.nome_produto`,
-      [id]
-    )
+      `SELECT
+         p.id_produto,
+         p.nome_produto,
+         p.categoria,
+         p.descricao,
+         p.peso,
+         p.volume,
+         p.lote,
+         p.preco_compra,
+         p.preco_venda,
+         p.id_fornecedor,
+         f.nome_fornecedor,
+         pe.quantidade_estoque_total,
+         pe.quantidade_estoque_atual,
+         CASE
+           WHEN pe.quantidade_estoque_atual <= pe.quantidade_estoque_total * 0.25 THEN 'Crítico'
+           WHEN pe.quantidade_estoque_atual <= pe.quantidade_estoque_total * 0.5 THEN 'Alerta'
+           ELSE 'Regular'
+         END AS status
+       FROM public.possui_estoque pe
+       INNER JOIN public.produto p
+         ON pe.id_produto = p.id_produto
+       INNER JOIN public.estoque e
+         ON e.id_estoque = pe.id_estoque
+       LEFT JOIN public.fornecedor f
+         ON p.id_fornecedor = f.id_fornecedor
+       WHERE pe.id_estoque = $1
+         AND e.id_usuario = $2
+       ORDER BY p.nome_produto`,
+      [id, id_usuario]
+    );
 
     return res.status(200).json({
       message: 'Produtos do estoque listados com sucesso',
       total: result.rows.length,
       produtos: result.rows
-    })
+    });
   } catch (error) {
     return res.status(500).json({
       message: 'Erro ao buscar produtos do estoque',
       error: error.message
-    })
+    });
   }
-}
+};
 
 export const addProductToStock = async (req, res) => {
   try {
-    const { id_estoque } = req.params
-    const { id_produto, quantidade_estoque_total, quantidade_estoque_atual } = req.body
+    const { id_estoque } = req.params;
+    const { id_produto, quantidade_estoque_total, quantidade_estoque_atual } = req.body;
+    const decoded = getUserFromToken(req);
+    const id_usuario = decoded.id_usuario;
 
     if (!id_produto || quantidade_estoque_total === undefined || quantidade_estoque_atual === undefined) {
       return res.status(400).json({
         message: 'id_produto, quantidade_estoque_total e quantidade_estoque_atual são obrigatórios'
-      })
+      });
     }
 
     if (quantidade_estoque_total < 0 || quantidade_estoque_atual < 0) {
-      return res.status(400).json({ message: 'Quantidades não podem ser negativas' })
+      return res.status(400).json({ message: 'Quantidades não podem ser negativas' });
+    }
+
+    const estoqueExiste = await pool.query(
+      `SELECT *
+       FROM public.estoque
+       WHERE id_estoque = $1 AND id_usuario = $2`,
+      [id_estoque, id_usuario]
+    );
+
+    if (estoqueExiste.rows.length === 0) {
+      return res.status(404).json({ message: 'Estoque não encontrado para este usuário' });
     }
 
     const checkProduct = await pool.query(
-      'SELECT * FROM public.possui_estoque WHERE id_estoque = $1 AND id_produto = $2',
+      `SELECT *
+       FROM public.possui_estoque
+       WHERE id_estoque = $1 AND id_produto = $2`,
       [id_estoque, id_produto]
-    )
+    );
 
     if (checkProduct.rows.length > 0) {
-      return res.status(400).json({ message: 'Produto já existe neste estoque' })
+      return res.status(400).json({ message: 'Produto já existe neste estoque' });
     }
 
     await pool.query(
-      'INSERT INTO public.possui_estoque (id_estoque, id_produto, quantidade_estoque_total, quantidade_estoque_atual) VALUES ($1, $2, $3, $4)',
+      `INSERT INTO public.possui_estoque
+       (id_estoque, id_produto, quantidade_estoque_total, quantidade_estoque_atual)
+       VALUES ($1, $2, $3, $4)`,
       [id_estoque, id_produto, quantidade_estoque_total, quantidade_estoque_atual]
-    )
+    );
 
-    return res.status(201).json({ message: 'Produto adicionado ao estoque com sucesso' })
+    return res.status(201).json({ message: 'Produto adicionado ao estoque com sucesso' });
   } catch (error) {
     return res.status(500).json({
       message: 'Erro ao adicionar produto ao estoque',
       error: error.message
-    })
+    });
   }
-}
+};
 
 export const updateProductInStock = async (req, res) => {
   try {
-    const { id_estoque, id_produto } = req.params
-    const { quantidade_estoque_total, quantidade_estoque_atual } = req.body
+    const { id_estoque, id_produto } = req.params;
+    const { quantidade_estoque_total, quantidade_estoque_atual } = req.body;
+    const decoded = getUserFromToken(req);
+    const id_usuario = decoded.id_usuario;
 
     if (quantidade_estoque_total === undefined && quantidade_estoque_atual === undefined) {
-      return res.status(400).json({ message: 'Informe ao menos um campo para atualizar' })
+      return res.status(400).json({ message: 'Informe ao menos um campo para atualizar' });
     }
 
-    if ((quantidade_estoque_total !== undefined && quantidade_estoque_total < 0) || 
-        (quantidade_estoque_atual !== undefined && quantidade_estoque_atual < 0)) {
-      return res.status(400).json({ message: 'Quantidades não podem ser negativas' })
+    if (
+      (quantidade_estoque_total !== undefined && quantidade_estoque_total < 0) ||
+      (quantidade_estoque_atual !== undefined && quantidade_estoque_atual < 0)
+    ) {
+      return res.status(400).json({ message: 'Quantidades não podem ser negativas' });
     }
 
-    // Busca o produto atual no estoque
     const checkProduct = await pool.query(
-      'SELECT * FROM public.possui_estoque WHERE id_estoque = $1 AND id_produto = $2',
-      [id_estoque, id_produto]
-    )
+      `SELECT pe.*
+       FROM public.possui_estoque pe
+       INNER JOIN public.estoque e ON e.id_estoque = pe.id_estoque
+       WHERE pe.id_estoque = $1
+         AND pe.id_produto = $2
+         AND e.id_usuario = $3`,
+      [id_estoque, id_produto, id_usuario]
+    );
 
     if (checkProduct.rows.length === 0) {
-      return res.status(404).json({ message: 'Produto não encontrado neste estoque' })
+      return res.status(404).json({ message: 'Produto não encontrado neste estoque' });
     }
 
-    const produtoAtual = checkProduct.rows[0]
-
-    // Usa os valores enviados OU mantém os valores atuais
-    const novaQuantidadeTotal = quantidade_estoque_total !== undefined ? quantidade_estoque_total : produtoAtual.quantidade_estoque_total
-    const novaQuantidadeAtual = quantidade_estoque_atual !== undefined ? quantidade_estoque_atual : produtoAtual.quantidade_estoque_atual
+    const produtoAtual = checkProduct.rows[0];
+    const novaQuantidadeTotal = quantidade_estoque_total !== undefined ? quantidade_estoque_total : produtoAtual.quantidade_estoque_total;
+    const novaQuantidadeAtual = quantidade_estoque_atual !== undefined ? quantidade_estoque_atual : produtoAtual.quantidade_estoque_atual;
 
     const result = await pool.query(
-      `UPDATE public.possui_estoque 
-       SET quantidade_estoque_total = $1, quantidade_estoque_atual = $2 
-       WHERE id_estoque = $3 AND id_produto = $4 
+      `UPDATE public.possui_estoque
+       SET quantidade_estoque_total = $1,
+           quantidade_estoque_atual = $2
+       WHERE id_estoque = $3 AND id_produto = $4
        RETURNING *`,
       [novaQuantidadeTotal, novaQuantidadeAtual, id_estoque, id_produto]
-    )
+    );
 
     return res.status(200).json({
       message: 'Quantidade atualizada com sucesso',
       produto: result.rows[0]
-    })
+    });
   } catch (error) {
     return res.status(500).json({
       message: 'Erro ao atualizar produto no estoque',
       error: error.message
-    })
+    });
   }
-}
+};
 
 export const deleteStock = async (req, res) => {
   try {
-    const { id } = req.params
+    const { id } = req.params;
+    const decoded = getUserFromToken(req);
+    const id_usuario = decoded.id_usuario;
 
     const result = await pool.query(
-      'DELETE FROM public.estoque WHERE id_estoque = $1 RETURNING *',
-      [id]
-    )
+      `DELETE FROM public.estoque
+       WHERE id_estoque = $1 AND id_usuario = $2
+       RETURNING *`,
+      [id, id_usuario]
+    );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Estoque não encontrado' })
+      return res.status(404).json({ message: 'Estoque não encontrado' });
     }
 
     return res.status(200).json({
       message: 'Estoque excluído com sucesso',
       estoque_excluido: result.rows[0]
-    })
+    });
   } catch (error) {
     return res.status(500).json({
       message: 'Erro ao excluir estoque',
       error: error.message
-    })
+    });
   }
-}
+};
 
 export const removeProductFromStock = async (req, res) => {
   try {
-    const { id_estoque, id_produto } = req.params
+    const { id_estoque, id_produto } = req.params;
+    const decoded = getUserFromToken(req);
+    const id_usuario = decoded.id_usuario;
 
-    const result = await pool.query(
-      'DELETE FROM public.possui_estoque WHERE id_estoque = $1 AND id_produto = $2 RETURNING *',
-      [id_estoque, id_produto]
-    )
+    const checkOwnership = await pool.query(
+      `SELECT pe.*
+       FROM public.possui_estoque pe
+       INNER JOIN public.estoque e ON e.id_estoque = pe.id_estoque
+       WHERE pe.id_estoque = $1
+         AND pe.id_produto = $2
+         AND e.id_usuario = $3`,
+      [id_estoque, id_produto, id_usuario]
+    );
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Produto não encontrado neste estoque' })
+    if (checkOwnership.rows.length === 0) {
+      return res.status(404).json({ message: 'Produto não encontrado neste estoque' });
     }
 
-    return res.status(200).json({ message: 'Produto removido do estoque com sucesso' })
+    await pool.query(
+      `DELETE FROM public.possui_estoque
+       WHERE id_estoque = $1 AND id_produto = $2`,
+      [id_estoque, id_produto]
+    );
+
+    return res.status(200).json({ message: 'Produto removido do estoque com sucesso' });
   } catch (error) {
     return res.status(500).json({
       message: 'Erro ao remover produto do estoque',
       error: error.message
-    })
+    });
   }
-}
-
+};
